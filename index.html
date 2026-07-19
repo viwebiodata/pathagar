@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">প্রতিষ্ঠিত পাঠাগার</div>
+    <h1>শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</h1>
+    <p>জ্ঞানচর্চা ও সামাজিক সচেতনতার একটি প্রাণকেন্দ্র। আমাদের পাঠাগারে বই খুঁজুন, সদস্য হোন এবং বই বুকিং করুন।</p>
+    <div class="address">📍 কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); margin-bottom:50px;">
+    <a href="books.html" class="index-card" style="display:block;">
+      <h3>📚 বই তালিকা</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin:0;">কোড, নাম বা লেখক দিয়ে বই খুঁজুন</p>
+    </a>
+    <a href="booking.html" class="index-card" style="display:block;">
+      <h3>🔖 বই বুকিং</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin:0;">বই নেওয়া ও ফেরতের হিসাব রাখুন</p>
+    </a>
+    <a href="members.html" class="index-card" style="display:block;">
+      <h3>🧑‍🤝‍🧑 সদস্য তালিকা</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin:0;">সদস্য হোন বা তালিকা দেখুন</p>
+    </a>
+    <a href="notices.html" class="index-card" style="display:block;">
+      <h3>📢 নোটিশ</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin:0;">সর্বশেষ ঘোষণা ও কর্মসূচি</p>
+    </a>
+  </section>
+
+  <section id="noticesSection" style="margin-bottom:50px;">
+    <div class="section-label">সাম্প্রতিক নোটিশ</div>
+    <div id="noticesList"></div>
+  </section>
+
+  <section id="projectsSection">
+    <div class="section-label">চলমান প্রকল্প</div>
+    <div id="projectsList" class="card-grid"></div>
+  </section>
+
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('index.html');
+
+async function loadNotices() {
+  const notices = await Api.get('listNotices');
+  const el = document.getElementById('noticesList');
+  if (!Array.isArray(notices) || notices.length === 0) {
+    document.getElementById('noticesSection').style.display = 'none';
+    return;
+  }
+  el.innerHTML = notices.slice(0, 3).map(n => `
+    <div class="notice">
+      <div class="date">${fmtDate(n.Date)}</div>
+      <strong>${n.Title}</strong>
+      <div>${n.Content}</div>
+    </div>
+  `).join('');
+}
+
+async function loadProjects() {
+  const projects = await Api.get('listProjects');
+  const el = document.getElementById('projectsList');
+  if (!Array.isArray(projects) || projects.length === 0) {
+    document.getElementById('projectsSection').style.display = 'none';
+    return;
+  }
+  el.innerHTML = projects.slice(0, 4).map(p => `
+    <div class="index-card">
+      <h3>${p.Title}</h3>
+      <p style="color:var(--muted); font-size:0.88rem;">${p.Description || ''}</p>
+    </div>
+  `).join('');
+}
+
+loadNotices();
+loadProjects();
+</script>
+</body>
+</html>

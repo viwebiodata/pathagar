@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>বই বুকিং — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap">
+  <div class="section-label">নতুন বুকিং</div>
+
+  <div class="panel" style="margin-bottom:30px;">
+    <div class="grid-2">
+      <div>
+        <label>বই কোড</label>
+        <input id="fBookCode" placeholder="যেমন: 101" oninput="lookupBook()" />
+        <div id="bookLookup" class="lookup-result" style="display:none;"></div>
+      </div>
+      <div>
+        <label>সদস্য আইডি</label>
+        <input id="fMemberId" placeholder="যেমন: 0001" oninput="lookupMember()" />
+        <div id="memberLookup" class="lookup-result" style="display:none;"></div>
+      </div>
+      <div>
+        <label>নেয়ার তারিখ</label>
+        <input id="fTakenDate" type="date" />
+      </div>
+      <div>
+        <label>ফেরতের তারিখ</label>
+        <input id="fDueDate" type="date" />
+      </div>
+    </div>
+    <button class="btn brass" style="margin-top:20px;" onclick="submitBooking()">বুকিং সংরক্ষণ করুন</button>
+    <div id="bookingMsg"></div>
+  </div>
+
+  <div class="section-label">বুকিং তালিকা</div>
+  <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
+    <input id="filterCode" placeholder="বই কোড দিয়ে ফিল্টার" style="max-width:220px;" oninput="loadBookings()" />
+    <input id="filterMember" placeholder="সদস্য আইডি দিয়ে ফিল্টার" style="max-width:220px;" oninput="loadBookings()" />
+    <select id="filterStatus" style="max-width:180px;" onchange="loadBookings()">
+      <option value="">সব</option>
+      <option value="active">চলমান</option>
+      <option value="returned">ফেরত দেওয়া</option>
+    </select>
+  </div>
+  <table>
+    <thead>
+      <tr><th>বুকিং আইডি</th><th>বই</th><th>সদস্য</th><th>নেয়ার তারিখ</th><th>ফেরতের তারিখ</th><th>অবস্থা</th><th></th></tr>
+    </thead>
+    <tbody id="bookingBody"></tbody>
+  </table>
+  <div class="empty-state" id="bookingEmpty" style="display:none;">কোনো বুকিং পাওয়া যায়নি।</div>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('booking.html');
+document.getElementById('fTakenDate').value = toInputDate(new Date());
+
+let bookLookupTimer, memberLookupTimer;
+
+function lookupBook() {
+  clearTimeout(bookLookupTimer);
+  bookLookupTimer = setTimeout(async () => {
+    const code = document.getElementById('fBookCode').value.trim();
+    const el = document.getElementById('bookLookup');
+    if (!code) { el.style.display = 'none'; return; }
+    const book = await Api.get('getBook', { code });
+    if (book.error) {
+      el.style.display = 'block';
+      el.innerHTML = `<span style="color:var(--rust);">${book.error}</span>`;
+      return;
+    }
+    const status = await Api.get('checkBookStatus', { code });
+    el.style.display = 'block';
+    if (status.available) {
+      el.innerHTML = `<strong>${book.Title}</strong> — ${book.Author} <span class="tag available" style="margin-left:6px;">উপলব্ধ</span>`;
+    } else {
+      el.innerHTML = `<strong>${book.Title}</strong> — ${book.Author} <span class="tag unavailable" style="margin-left:6px;">"${status.memberName}" এর কাছে বুকিং আছে</span>`;
+    }
+  }, 350);
+}
+
+function lookupMember() {
+  clearTimeout(memberLookupTimer);
+  memberLookupTimer = setTimeout(async () => {
+    const id = document.getElementById('fMemberId').value.trim();
+    const el = document.getElementById('memberLookup');
+    if (!id) { el.style.display = 'none'; return; }
+    const member = await Api.get('getMember', { id });
+    el.style.display = 'block';
+    if (member.error) {
+      el.innerHTML = `<span style="color:var(--rust);">${member.error}</span>`;
+      return;
+    }
+    el.innerHTML = `<strong>${member.Name}</strong> — ${member.Village || ''}`;
+  }, 350);
+}
+
+async function submitBooking() {
+  const payload = {
+    bookCode: document.getElementById('fBookCode').value.trim(),
+    memberId: document.getElementById('fMemberId').value.trim(),
+    takenDate: document.getElementById('fTakenDate').value,
+    dueDate: document.getElementById('fDueDate').value,
+  };
+  const msg = document.getElementById('bookingMsg');
+  if (!payload.bookCode || !payload.memberId) {
+    msg.innerHTML = `<div class="msg error">বই কোড ও সদস্য আইডি দিন</div>`;
+    return;
+  }
+  const res = await Api.post('createBooking', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">বুকিং সংরক্ষণ হয়েছে: "${res.bookTitle}" → ${res.memberName}</div>`;
+  document.getElementById('fBookCode').value = '';
+  document.getElementById('fMemberId').value = '';
+  document.getElementById('fDueDate').value = '';
+  document.getElementById('bookLookup').style.display = 'none';
+  document.getElementById('memberLookup').style.display = 'none';
+  loadBookings();
+}
+
+function onAdminStateChange() { loadBookings(); }
+
+async function loadBookings() {
+  const bookCode = document.getElementById('filterCode').value.trim();
+  const memberId = document.getElementById('filterMember').value.trim();
+  const status = document.getElementById('filterStatus').value;
+  const bookings = await Api.get('listBookings', { bookCode, memberId, status });
+  const body = document.getElementById('bookingBody');
+  const empty = document.getElementById('bookingEmpty');
+  if (!bookings || bookings.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = bookings.map(b => {
+    const statusHtml = b.Status === 'returned'
+      ? `<span class="stamp ok">ফেরত দেওয়া হয়েছে</span>`
+      : `<span class="stamp">চলমান</span>`;
+    let actions = '';
+    if (b.Status === 'active') {
+      actions += `<button class="btn small brass" onclick="markReturned('${b.ID}')">ফেরত দিন</button>`;
+    }
+    if (isAdmin()) {
+      actions += ` <button class="btn small" style="background:var(--rust);" onclick="removeBooking('${b.ID}')">ডিলিট</button>`;
+    }
+    return `<tr>
+      <td class="mono">${b.ID}</td>
+      <td><strong>${b.BookTitle || b.BookCode}</strong><br><span style="color:var(--muted); font-size:0.8rem;">কোড: ${b.BookCode}</span></td>
+      <td>${b.MemberName || b.MemberID}<br><span style="color:var(--muted); font-size:0.8rem;">আইডি: ${b.MemberID}</span></td>
+      <td class="mono">${fmtDate(b.TakenDate)}</td>
+      <td class="mono">${fmtDate(b.DueDate)}</td>
+      <td>${statusHtml}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function markReturned(id) {
+  if (!confirm('বইটি ফেরত এসেছে বলে চিহ্নিত করবেন?')) return;
+  const res = await Api.post('returnBooking', { id, returnDate: toInputDate(new Date()) });
+  if (res.error) { alert(res.error); return; }
+  loadBookings();
+}
+
+async function removeBooking(id) {
+  if (!confirm('এই বুকিং রেকর্ডটি মুছে ফেলতে চান?')) return;
+  await Api.post('deleteBooking', { id });
+  loadBookings();
+}
+
+loadBookings();
+</script>
+</body>
+</html>

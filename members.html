@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>সদস্য তালিকা — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap">
+
+  <div class="section-label">নতুন সদস্য রেজিস্ট্রেশন</div>
+  <div class="panel" style="margin-bottom:36px;">
+    <div class="grid-2">
+      <div><label>নাম</label><input id="mName" /></div>
+      <div><label>বাবার নাম</label><input id="mFather" /></div>
+      <div><label>মায়ের নাম</label><input id="mMother" /></div>
+      <div><label>গ্রাম</label><input id="mVillage" /></div>
+      <div><label>শিক্ষাগত যোগ্যতা</label><input id="mEducation" /></div>
+      <div><label>ফোন নম্বর</label><input id="mPhone" /></div>
+      <div>
+        <label>সদস্যের ধরন</label>
+        <select id="mType" onchange="toggleCustomType()">
+          <option value="সাধারণ সদস্য">সাধারণ সদস্য</option>
+          <option value="সভাপতি">সভাপতি</option>
+          <option value="সহ-সভাপতি">সহ-সভাপতি</option>
+          <option value="সাধারণ সম্পাদক">সাধারণ সম্পাদক</option>
+          <option value="সহ-সম্পাদক">সহ-সম্পাদক</option>
+          <option value="কোষাধ্যক্ষ">কোষাধ্যক্ষ</option>
+          <option value="লাইব্রেরিয়ান">লাইব্রেরিয়ান</option>
+          <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
+        </select>
+      </div>
+      <div id="customTypeWrap" style="display:none;">
+        <label>পদবি লিখুন</label>
+        <input id="mTypeCustom" placeholder="যেমন: দপ্তর সম্পাদক" />
+      </div>
+    </div>
+
+    <label>সদস্যের ছবি</label>
+    <input id="mPhoto" type="file" accept="image/*" onchange="handlePhoto(event)" />
+    <img id="photoPreview" style="display:none; margin-top:10px; width:90px; height:90px; object-fit:cover; border:1px solid var(--line); border-radius:4px;" />
+
+    <div class="grid-2">
+      <div><label>চাঁদার পরিমাণ (৳)</label><input id="mFee" type="number" min="0" /></div>
+      <div>
+        <label>পেমেন্ট পদ্ধতি</label>
+        <select id="mPayMethod" onchange="togglePayMethod()">
+          <option value="cash">ক্যাশ</option>
+          <option value="online">অনলাইন</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cashWrap">
+      <label>কার কাছে জমা দিলেন</label>
+      <input id="mCashReceivedBy" placeholder="যার কাছে টাকা জমা দেওয়া হয়েছে তার নাম" />
+    </div>
+    <div id="onlineWrap" style="display:none;">
+      <div class="grid-2">
+        <div><label>কোন নম্বর হতে পাঠানো হয়েছে</label><input id="mTransFrom" /></div>
+        <div><label>কোন নম্বরে পাঠানো হয়েছে</label><input id="mTransTo" /></div>
+      </div>
+      <label>ট্রানজেকশন নম্বর</label>
+      <input id="mTransactionId" placeholder="যেমন: 8N7K2X9P1Q" />
+    </div>
+
+    <button class="btn brass" style="margin-top:20px;" onclick="registerMember()">সদস্য হোন</button>
+    <div id="regMsg"></div>
+  </div>
+
+  <div class="section-label">সদস্য তালিকা</div>
+  <input id="memberSearch" placeholder="নাম বা আইডি দিয়ে খুঁজুন..." style="max-width:320px; margin-bottom:18px;" oninput="renderMembers()" />
+  <table>
+    <thead>
+      <tr>
+        <th>ছবি</th><th>আইডি</th><th>নাম</th><th>ধরন</th><th>গ্রাম</th>
+        <th id="phoneHeader" style="display:none;">ফোন</th>
+        <th id="feeHeader" style="display:none;">চাঁদা</th>
+        <th id="payHeader" style="display:none;">পেমেন্ট বিবরণ</th>
+      </tr>
+    </thead>
+    <tbody id="memberBody"></tbody>
+  </table>
+  <div class="empty-state" id="memberEmpty" style="display:none;">কোনো সদস্য নেই।</div>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('members.html');
+let allMembers = [];
+
+function onAdminStateChange() { renderMembers(); }
+
+function toggleCustomType() {
+  const isOther = document.getElementById('mType').value === 'অন্যান্য';
+  document.getElementById('customTypeWrap').style.display = isOther ? 'block' : 'none';
+}
+
+function togglePayMethod() {
+  const online = document.getElementById('mPayMethod').value === 'online';
+  document.getElementById('cashWrap').style.display = online ? 'none' : 'block';
+  document.getElementById('onlineWrap').style.display = online ? 'block' : 'none';
+}
+
+let photoDataUrl = '';
+function handlePhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) { photoDataUrl = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      // ছবি ছোট করে (max 400px) সংরক্ষণের জন্য base64 বানানো হচ্ছে, যাতে দ্রুত আপলোড হয়
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
+      else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      photoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      const preview = document.getElementById('photoPreview');
+      preview.src = photoDataUrl;
+      preview.style.display = 'block';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function registerMember() {
+  const typeSelect = document.getElementById('mType').value;
+  const memberType = typeSelect === 'অন্যান্য' ? document.getElementById('mTypeCustom').value.trim() : typeSelect;
+  const payMethod = document.getElementById('mPayMethod').value;
+
+  const payload = {
+    name: document.getElementById('mName').value.trim(),
+    fatherName: document.getElementById('mFather').value.trim(),
+    motherName: document.getElementById('mMother').value.trim(),
+    village: document.getElementById('mVillage').value.trim(),
+    education: document.getElementById('mEducation').value.trim(),
+    phone: document.getElementById('mPhone').value.trim(),
+    memberType: memberType || 'সাধারণ সদস্য',
+    photo: photoDataUrl,
+    feeAmount: document.getElementById('mFee').value || 0,
+    paymentMethod: payMethod,
+    cashReceivedBy: payMethod === 'cash' ? document.getElementById('mCashReceivedBy').value.trim() : '',
+    transFrom: payMethod === 'online' ? document.getElementById('mTransFrom').value.trim() : '',
+    transTo: payMethod === 'online' ? document.getElementById('mTransTo').value.trim() : '',
+    transactionId: payMethod === 'online' ? document.getElementById('mTransactionId').value.trim() : '',
+  };
+  const msg = document.getElementById('regMsg');
+  if (!payload.name || !payload.phone) {
+    msg.innerHTML = `<div class="msg error">নাম ও ফোন নম্বর আবশ্যক</div>`;
+    return;
+  }
+  if (payMethod === 'online' && !payload.transactionId) {
+    msg.innerHTML = `<div class="msg error">অনলাইন পেমেন্টের ক্ষেত্রে ট্রানজেকশন নম্বর আবশ্যক</div>`;
+    return;
+  }
+  msg.innerHTML = `<div class="msg success">সংরক্ষণ করা হচ্ছে...</div>`;
+  const res = await Api.post('registerMember', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">সদস্যপদ তৈরি হয়েছে। আপনার সদস্য আইডি: <strong class="mono">${res.id}</strong> — বই বুকিং এর সময় এই আইডি ব্যবহার করুন।</div>`;
+  ['mName', 'mFather', 'mMother', 'mVillage', 'mEducation', 'mPhone', 'mFee', 'mCashReceivedBy', 'mTransFrom', 'mTransTo', 'mTransactionId'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mType').value = 'সাধারণ সদস্য';
+  toggleCustomType();
+  document.getElementById('mPhoto').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  photoDataUrl = '';
+  loadMembers();
+}
+
+function renderMembers() {
+  const q = document.getElementById('memberSearch').value.trim().toLowerCase();
+  const list = q
+    ? allMembers.filter(m => String(m.Name).toLowerCase().includes(q) || String(m.ID).includes(q))
+    : allMembers;
+
+  const adminOn = isAdmin();
+  document.getElementById('phoneHeader').style.display = adminOn ? '' : 'none';
+  document.getElementById('feeHeader').style.display = adminOn ? '' : 'none';
+  document.getElementById('payHeader').style.display = adminOn ? '' : 'none';
+
+  const body = document.getElementById('memberBody');
+  const empty = document.getElementById('memberEmpty');
+  if (list.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = list.map(m => {
+    const photo = m.PhotoURL
+      ? `<img src="${m.PhotoURL}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--line);" />`
+      : `<div style="width:40px; height:40px; border-radius:4px; background:var(--line); display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:var(--muted);">নেই</div>`;
+    let payDetail = '—';
+    if (m.PaymentMethod === 'cash') {
+      payDetail = `ক্যাশ · ${m.CashReceivedBy || '—'}`;
+    } else if (m.PaymentMethod === 'online') {
+      payDetail = `অনলাইন · ${m.TransFrom || '—'} → ${m.TransTo || '—'} · ট্রা.নং: ${m.TransactionID || '—'}`;
+    }
+    return `
+    <tr>
+      <td>${photo}</td>
+      <td class="mono">${m.ID}</td>
+      <td>${m.Name}<br><span style="color:var(--muted); font-size:0.78rem;">${m.FatherName || ''}</span></td>
+      <td><span class="tag available">${m.MemberType || 'সাধারণ সদস্য'}</span></td>
+      <td>${m.Village || '—'}</td>
+      <td style="display:${adminOn ? 'table-cell' : 'none'};">${m.Phone || '—'}</td>
+      <td style="display:${adminOn ? 'table-cell' : 'none'};" class="mono">${m.FeeAmount ? '৳' + m.FeeAmount : '—'}</td>
+      <td style="display:${adminOn ? 'table-cell' : 'none'}; font-size:0.8rem;">${payDetail}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadMembers() {
+  allMembers = await Api.get('listMembers');
+  renderMembers();
+}
+
+loadMembers();
+</script>
+</body>
+</html>

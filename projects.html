@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>প্রকল্প — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap">
+  <div class="section-label">প্রকল্পসমূহ</div>
+
+  <div id="adminBlock" class="admin-only-block" style="display:none;">
+    <span class="admin-badge">অ্যাডমিন — নতুন প্রকল্প</span>
+    <label>শিরোনাম</label>
+    <input id="pTitle" />
+    <label>বিবরণ</label>
+    <textarea id="pDescription" rows="3"></textarea>
+    <button class="btn brass" style="margin-top:18px;" onclick="addProject()">যোগ করুন</button>
+    <div id="pMsg"></div>
+  </div>
+
+  <div class="card-grid" id="projectGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">এখনো কোনো প্রকল্প যোগ করা হয়নি।</div>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('projects.html');
+
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  loadProjects();
+}
+
+async function loadProjects() {
+  const projects = await Api.get('listProjects');
+  const el = document.getElementById('projectGrid');
+  const empty = document.getElementById('emptyState');
+  if (!projects || projects.length === 0) {
+    el.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  el.innerHTML = projects.map(p => `
+    <div class="index-card">
+      <div class="catid mono">${fmtDate(p.Date)}</div>
+      <h3>${p.Title}</h3>
+      <p style="color:var(--muted); font-size:0.9rem;">${p.Description || ''}</p>
+      ${isAdmin() ? `<div class="row-actions"><button class="btn small" style="background:var(--rust);" onclick="removeProject('${p.ID}')">ডিলিট</button></div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function addProject() {
+  const payload = {
+    title: document.getElementById('pTitle').value.trim(),
+    description: document.getElementById('pDescription').value.trim(),
+  };
+  const msg = document.getElementById('pMsg');
+  if (!payload.title) { msg.innerHTML = `<div class="msg error">শিরোনাম দিন</div>`; return; }
+  const res = await Api.post('addProject', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">প্রকল্প যোগ হয়েছে</div>`;
+  document.getElementById('pTitle').value = '';
+  document.getElementById('pDescription').value = '';
+  loadProjects();
+}
+
+async function removeProject(id) {
+  if (!confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
+  await Api.post('deleteProject', { id });
+  loadProjects();
+}
+
+onAdminStateChange();
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>বই তালিকা — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap">
+  <div class="section-label">বই তালিকা</div>
+
+  <div class="search-row" style="display:flex; gap:10px; margin-bottom:26px;">
+    <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক দিয়ে খুঁজুন..." style="flex:1;" />
+    <button class="btn brass" onclick="doSearch()">খুঁজুন</button>
+  </div>
+
+  <div id="adminBlock" class="admin-only-block" style="display:none;">
+    <span class="admin-badge">অ্যাডমিন — নতুন বই যোগ করুন</span>
+    <div class="grid-2">
+      <div><label>কোড</label><input id="bCode" /></div>
+      <div><label>বইয়ের নাম</label><input id="bTitle" /></div>
+      <div><label>লেখকের নাম</label><input id="bAuthor" /></div>
+      <div><label>বিষয় (ঐচ্ছিক)</label><input id="bCategory" /></div>
+    </div>
+    <button class="btn brass" style="margin-top:18px;" onclick="addBook()">যোগ করুন</button>
+    <div id="bMsg"></div>
+  </div>
+
+  <div class="card-grid" id="bookGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">কোনো বই পাওয়া যায়নি।</div>
+</main>
+
+<!-- সম্পাদনার জন্য মডাল -->
+<div id="editModalRoot"></div>
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('books.html');
+let allBooks = [];
+
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  renderBooks(allBooks);
+}
+
+function bookCard(b) {
+  const adminButtons = isAdmin() ? `
+    <div class="row-actions">
+      <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
+      <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
+    </div>` : '';
+  return `
+    <div class="index-card">
+      <div class="catid mono">কোড: ${b.Code}${b.Category ? ' · ' + b.Category : ''}</div>
+      <h3>${b.Title}</h3>
+      <div class="author">লেখক: ${b.Author}</div>
+      ${adminButtons}
+    </div>
+  `;
+}
+
+function renderBooks(list) {
+  const grid = document.getElementById('bookGrid');
+  const empty = document.getElementById('emptyState');
+  if (!list || list.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(bookCard).join('');
+}
+
+async function loadBooks() {
+  allBooks = await Api.get('listBooks');
+  renderBooks(allBooks);
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  const list = q ? await Api.get('listBooks', { q }) : allBooks;
+  renderBooks(list);
+}
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function addBook() {
+  const payload = {
+    code: document.getElementById('bCode').value.trim(),
+    title: document.getElementById('bTitle').value.trim(),
+    author: document.getElementById('bAuthor').value.trim(),
+    category: document.getElementById('bCategory').value.trim(),
+  };
+  const msg = document.getElementById('bMsg');
+  if (!payload.code || !payload.title || !payload.author) {
+    msg.innerHTML = `<div class="msg error">কোড, নাম ও লেখক আবশ্যক</div>`;
+    return;
+  }
+  const res = await Api.post('addBook', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">বই যোগ হয়েছে</div>`;
+  ['bCode', 'bTitle', 'bAuthor', 'bCategory'].forEach(id => document.getElementById(id).value = '');
+  loadBooks();
+}
+
+async function removeBook(code) {
+  if (!confirm(`কোড ${code} এর বইটি মুছে ফেলতে চান?`)) return;
+  await Api.post('deleteBook', { code });
+  loadBooks();
+}
+
+function openEdit(code) {
+  const book = allBooks.find(b => String(b.Code) === String(code));
+  if (!book) return;
+  document.getElementById('editModalRoot').innerHTML = `
+    <div class="modal-backdrop" onclick="closeEdit(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>বই এডিট করুন</h3>
+        <label>কোড</label>
+        <input value="${book.Code}" disabled />
+        <label>বইয়ের নাম</label>
+        <input id="eTitle" value="${book.Title}" />
+        <label>লেখকের নাম</label>
+        <input id="eAuthor" value="${book.Author}" />
+        <label>বিষয়</label>
+        <input id="eCategory" value="${book.Category || ''}" />
+        <button class="btn brass" style="margin-top:18px;" onclick="saveEdit('${book.Code}')">সংরক্ষণ করুন</button>
+        <button class="btn outline" style="margin-top:18px;" onclick="closeEdit()">বাতিল</button>
+      </div>
+    </div>
+  `;
+}
+function closeEdit() { document.getElementById('editModalRoot').innerHTML = ''; }
+
+async function saveEdit(code) {
+  const payload = {
+    code,
+    title: document.getElementById('eTitle').value.trim(),
+    author: document.getElementById('eAuthor').value.trim(),
+    category: document.getElementById('eCategory').value.trim(),
+  };
+  const res = await Api.post('updateBook', payload);
+  if (res.error) { alert(res.error); return; }
+  closeEdit();
+  loadBooks();
+}
+
+onAdminStateChange();
+loadBooks();
+</script>
+</body>
+</html>

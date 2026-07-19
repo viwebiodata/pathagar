@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>নোটিশ — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap" style="max-width:760px;">
+  <div class="section-label">নোটিশ বোর্ড</div>
+
+  <div id="adminBlock" class="admin-only-block" style="display:none;">
+    <span class="admin-badge">অ্যাডমিন — নতুন নোটিশ</span>
+    <label>শিরোনাম</label>
+    <input id="nTitle" />
+    <label>বিস্তারিত</label>
+    <textarea id="nContent" rows="3"></textarea>
+    <button class="btn brass" style="margin-top:18px;" onclick="addNotice()">প্রকাশ করুন</button>
+    <div id="nMsg"></div>
+  </div>
+
+  <div id="noticesList"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">এখনো কোনো নোটিশ নেই।</div>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('notices.html');
+
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  loadNotices();
+}
+
+async function loadNotices() {
+  const notices = await Api.get('listNotices');
+  const el = document.getElementById('noticesList');
+  const empty = document.getElementById('emptyState');
+  if (!notices || notices.length === 0) {
+    el.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  el.innerHTML = notices.map(n => `
+    <div class="notice">
+      <div class="date">${fmtDate(n.Date)}</div>
+      <strong>${n.Title}</strong>
+      <div>${n.Content}</div>
+      ${isAdmin() ? `<div class="row-actions"><button class="btn small" style="background:var(--rust);" onclick="removeNotice('${n.ID}')">ডিলিট</button></div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function addNotice() {
+  const payload = {
+    title: document.getElementById('nTitle').value.trim(),
+    content: document.getElementById('nContent').value.trim(),
+  };
+  const msg = document.getElementById('nMsg');
+  if (!payload.title) { msg.innerHTML = `<div class="msg error">শিরোনাম দিন</div>`; return; }
+  const res = await Api.post('addNotice', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">নোটিশ প্রকাশিত হয়েছে</div>`;
+  document.getElementById('nTitle').value = '';
+  document.getElementById('nContent').value = '';
+  loadNotices();
+}
+
+async function removeNotice(id) {
+  if (!confirm('নোটিশটি মুছে ফেলতে চান?')) return;
+  await Api.post('deleteNotice', { id });
+  loadNotices();
+}
+
+onAdminStateChange();
+</script>
+</body>
+</html>
