@@ -11,9 +11,12 @@
 <div id="navRoot"></div>
 
 <main class="wrap">
-  <div class="section-label">নতুন বুকিং</div>
+  <div class="page-toolbar">
+    <div class="section-label">নতুন বুকিং</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
 
-  <div class="panel" style="margin-bottom:30px;">
+  <div id="bookingFormPanel" class="panel" style="margin-bottom:30px; display:none;">
     <div class="grid-2">
       <div>
         <label>বই কোড</label>
@@ -38,6 +41,11 @@
     <div id="bookingMsg"></div>
   </div>
 
+  <div id="bookingLoginPrompt" class="panel" style="margin-bottom:30px;">
+    <p style="margin:0 0 12px; color:var(--muted);">নতুন বুকিং করতে বা বই ফেরত নিতে অ্যাডমিন লগইন প্রয়োজন। কোনো বই এখন কার কাছে আছে তা লগইন ছাড়াই নিচে চেক করতে পারবেন।</p>
+    <button class="btn brass" onclick="openAdminLogin()">অ্যাডমিন লগইন</button>
+  </div>
+
   <div class="section-label">বুকিং তালিকা</div>
   <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
     <input id="filterCode" placeholder="বই কোড দিয়ে ফিল্টার" style="max-width:220px;" oninput="loadBookings()" />
@@ -50,7 +58,7 @@
   </div>
   <table>
     <thead>
-      <tr><th>বুকিং আইডি</th><th>বই</th><th>সদস্য</th><th>নেয়ার তারিখ</th><th>ফেরতের তারিখ</th><th>অবস্থা</th><th></th></tr>
+      <tr><th>বুকিং আইডি</th><th>বই</th><th>সদস্য</th><th>নেয়ার তারিখ</th><th>ফেরতের তারিখ</th><th>অবস্থা</th><th>জরিমানা</th><th></th></tr>
     </thead>
     <tbody id="bookingBody"></tbody>
   </table>
@@ -129,7 +137,11 @@ async function submitBooking() {
   loadBookings();
 }
 
-function onAdminStateChange() { loadBookings(); }
+function onAdminStateChange() {
+  document.getElementById('bookingFormPanel').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('bookingLoginPrompt').style.display = isAdmin() ? 'none' : 'block';
+  loadBookings();
+}
 
 async function loadBookings() {
   const bookCode = document.getElementById('filterCode').value.trim();
@@ -145,23 +157,35 @@ async function loadBookings() {
   }
   empty.style.display = 'none';
   body.innerHTML = bookings.map(b => {
-    const statusHtml = b.Status === 'returned'
-      ? `<span class="stamp ok">ফেরত দেওয়া হয়েছে</span>`
-      : `<span class="stamp">চলমান</span>`;
+    let statusHtml;
+    if (b.Status === 'returned') {
+      statusHtml = b.IsOverdue
+        ? `<span class="stamp">ফেরত (দেরিতে)</span>`
+        : `<span class="stamp ok">ফেরত দেওয়া হয়েছে</span>`;
+    } else {
+      statusHtml = b.IsOverdue
+        ? `<span class="stamp">মেয়াদ শেষ · ${b.OverdueDays} দিন</span>`
+        : `<span class="stamp ok">চলমান</span>`;
+    }
+    const fineHtml = b.Fine > 0
+      ? `<span class="mono" style="color:var(--rust); font-weight:600;">৳${b.Fine}</span>`
+      : `<span class="mono" style="color:var(--muted);">—</span>`;
     let actions = '';
-    if (b.Status === 'active') {
+    if (b.Status === 'active' && isAdmin()) {
       actions += `<button class="btn small brass" onclick="markReturned('${b.ID}')">ফেরত দিন</button>`;
     }
     if (isAdmin()) {
       actions += ` <button class="btn small" style="background:var(--rust);" onclick="removeBooking('${b.ID}')">ডিলিট</button>`;
     }
-    return `<tr>
+    const rowStyle = b.IsOverdue ? 'style="background:rgba(154,59,59,0.06);"' : '';
+    return `<tr ${rowStyle}>
       <td class="mono">${b.ID}</td>
       <td><strong>${b.BookTitle || b.BookCode}</strong><br><span style="color:var(--muted); font-size:0.8rem;">কোড: ${b.BookCode}</span></td>
       <td>${b.MemberName || b.MemberID}<br><span style="color:var(--muted); font-size:0.8rem;">আইডি: ${b.MemberID}</span></td>
       <td class="mono">${fmtDate(b.TakenDate)}</td>
-      <td class="mono">${fmtDate(b.DueDate)}</td>
+      <td class="mono" style="${b.IsOverdue ? 'color:var(--rust); font-weight:600;' : ''}">${fmtDate(b.DueDate)}</td>
       <td>${statusHtml}</td>
+      <td>${fineHtml}</td>
       <td>${actions}</td>
     </tr>`;
   }).join('');
@@ -180,7 +204,8 @@ async function removeBooking(id) {
   loadBookings();
 }
 
-loadBookings();
+renderRefreshBtn(loadBookings);
+onAdminStateChange();
 </script>
 </body>
 </html>
