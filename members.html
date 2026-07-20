@@ -11,69 +11,16 @@
 <div id="navRoot"></div>
 
 <main class="wrap">
-
-  <div class="section-label">নতুন সদস্য রেজিস্ট্রেশন</div>
-  <div class="panel" style="margin-bottom:36px;">
-    <div class="grid-2">
-      <div><label>নাম</label><input id="mName" /></div>
-      <div><label>বাবার নাম</label><input id="mFather" /></div>
-      <div><label>মায়ের নাম</label><input id="mMother" /></div>
-      <div><label>গ্রাম</label><input id="mVillage" /></div>
-      <div><label>শিক্ষাগত যোগ্যতা</label><input id="mEducation" /></div>
-      <div><label>ফোন নম্বর</label><input id="mPhone" /></div>
-      <div>
-        <label>সদস্যের ধরন</label>
-        <select id="mType" onchange="toggleCustomType()">
-          <option value="সাধারণ সদস্য">সাধারণ সদস্য</option>
-          <option value="সভাপতি">সভাপতি</option>
-          <option value="সহ-সভাপতি">সহ-সভাপতি</option>
-          <option value="সাধারণ সম্পাদক">সাধারণ সম্পাদক</option>
-          <option value="সহ-সম্পাদক">সহ-সম্পাদক</option>
-          <option value="কোষাধ্যক্ষ">কোষাধ্যক্ষ</option>
-          <option value="লাইব্রেরিয়ান">লাইব্রেরিয়ান</option>
-          <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
-        </select>
-      </div>
-      <div id="customTypeWrap" style="display:none;">
-        <label>পদবি লিখুন</label>
-        <input id="mTypeCustom" placeholder="যেমন: দপ্তর সম্পাদক" />
-      </div>
-    </div>
-
-    <label>সদস্যের ছবি</label>
-    <input id="mPhoto" type="file" accept="image/*" onchange="handlePhoto(event)" />
-    <img id="photoPreview" style="display:none; margin-top:10px; width:90px; height:90px; object-fit:cover; border:1px solid var(--line); border-radius:4px;" />
-
-    <div class="grid-2">
-      <div><label>চাঁদার পরিমাণ (৳)</label><input id="mFee" type="number" min="0" /></div>
-      <div>
-        <label>পেমেন্ট পদ্ধতি</label>
-        <select id="mPayMethod" onchange="togglePayMethod()">
-          <option value="cash">ক্যাশ</option>
-          <option value="online">অনলাইন</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="cashWrap">
-      <label>কার কাছে জমা দিলেন</label>
-      <input id="mCashReceivedBy" placeholder="যার কাছে টাকা জমা দেওয়া হয়েছে তার নাম" />
-    </div>
-    <div id="onlineWrap" style="display:none;">
-      <div class="grid-2">
-        <div><label>কোন নম্বর হতে পাঠানো হয়েছে</label><input id="mTransFrom" /></div>
-        <div><label>কোন নম্বরে পাঠানো হয়েছে</label><input id="mTransTo" /></div>
-      </div>
-      <label>ট্রানজেকশন নম্বর</label>
-      <input id="mTransactionId" placeholder="যেমন: 8N7K2X9P1Q" />
-    </div>
-
-    <button class="btn brass" style="margin-top:20px;" onclick="registerMember()">সদস্য হোন</button>
-    <div id="regMsg"></div>
+  <div class="page-toolbar">
+    <div class="section-label">সদস্য তালিকা</div>
+    <div id="refreshBtnRoot"></div>
   </div>
 
-  <div class="section-label">সদস্য তালিকা</div>
-  <input id="memberSearch" placeholder="নাম বা আইডি দিয়ে খুঁজুন..." style="max-width:320px; margin-bottom:18px;" oninput="renderMembers()" />
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap;">
+    <input id="memberSearch" placeholder="নাম বা আইডি দিয়ে খুঁজুন..." style="max-width:320px;" oninput="renderMembers()" />
+    <a href="register.html" class="btn brass" style="white-space:nowrap;">+ নতুন সদস্য যোগ করুন</a>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -81,6 +28,7 @@
         <th id="phoneHeader" style="display:none;">ফোন</th>
         <th id="feeHeader" style="display:none;">চাঁদা</th>
         <th id="payHeader" style="display:none;">পেমেন্ট বিবরণ</th>
+        <th id="actionsHeader" style="display:none;"></th>
       </tr>
     </thead>
     <tbody id="memberBody"></tbody>
@@ -88,6 +36,7 @@
   <div class="empty-state" id="memberEmpty" style="display:none;">কোনো সদস্য নেই।</div>
 </main>
 
+<div id="editModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
 
@@ -96,88 +45,9 @@
 <script>
 renderNav('members.html');
 let allMembers = [];
+let committeeByMember = {};
 
 function onAdminStateChange() { renderMembers(); }
-
-function toggleCustomType() {
-  const isOther = document.getElementById('mType').value === 'অন্যান্য';
-  document.getElementById('customTypeWrap').style.display = isOther ? 'block' : 'none';
-}
-
-function togglePayMethod() {
-  const online = document.getElementById('mPayMethod').value === 'online';
-  document.getElementById('cashWrap').style.display = online ? 'none' : 'block';
-  document.getElementById('onlineWrap').style.display = online ? 'block' : 'none';
-}
-
-let photoDataUrl = '';
-function handlePhoto(evt) {
-  const file = evt.target.files[0];
-  if (!file) { photoDataUrl = ''; return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => {
-      // ছবি ছোট করে (max 400px) সংরক্ষণের জন্য base64 বানানো হচ্ছে, যাতে দ্রুত আপলোড হয়
-      const maxSize = 400;
-      let { width, height } = img;
-      if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
-      else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
-      const canvas = document.createElement('canvas');
-      canvas.width = width; canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      photoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-      const preview = document.getElementById('photoPreview');
-      preview.src = photoDataUrl;
-      preview.style.display = 'block';
-    };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function registerMember() {
-  const typeSelect = document.getElementById('mType').value;
-  const memberType = typeSelect === 'অন্যান্য' ? document.getElementById('mTypeCustom').value.trim() : typeSelect;
-  const payMethod = document.getElementById('mPayMethod').value;
-
-  const payload = {
-    name: document.getElementById('mName').value.trim(),
-    fatherName: document.getElementById('mFather').value.trim(),
-    motherName: document.getElementById('mMother').value.trim(),
-    village: document.getElementById('mVillage').value.trim(),
-    education: document.getElementById('mEducation').value.trim(),
-    phone: document.getElementById('mPhone').value.trim(),
-    memberType: memberType || 'সাধারণ সদস্য',
-    photo: photoDataUrl,
-    feeAmount: document.getElementById('mFee').value || 0,
-    paymentMethod: payMethod,
-    cashReceivedBy: payMethod === 'cash' ? document.getElementById('mCashReceivedBy').value.trim() : '',
-    transFrom: payMethod === 'online' ? document.getElementById('mTransFrom').value.trim() : '',
-    transTo: payMethod === 'online' ? document.getElementById('mTransTo').value.trim() : '',
-    transactionId: payMethod === 'online' ? document.getElementById('mTransactionId').value.trim() : '',
-  };
-  const msg = document.getElementById('regMsg');
-  if (!payload.name || !payload.phone) {
-    msg.innerHTML = `<div class="msg error">নাম ও ফোন নম্বর আবশ্যক</div>`;
-    return;
-  }
-  if (payMethod === 'online' && !payload.transactionId) {
-    msg.innerHTML = `<div class="msg error">অনলাইন পেমেন্টের ক্ষেত্রে ট্রানজেকশন নম্বর আবশ্যক</div>`;
-    return;
-  }
-  msg.innerHTML = `<div class="msg success">সংরক্ষণ করা হচ্ছে...</div>`;
-  const res = await Api.post('registerMember', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">সদস্যপদ তৈরি হয়েছে। আপনার সদস্য আইডি: <strong class="mono">${res.id}</strong> — বই বুকিং এর সময় এই আইডি ব্যবহার করুন।</div>`;
-  ['mName', 'mFather', 'mMother', 'mVillage', 'mEducation', 'mPhone', 'mFee', 'mCashReceivedBy', 'mTransFrom', 'mTransTo', 'mTransactionId'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('mType').value = 'সাধারণ সদস্য';
-  toggleCustomType();
-  document.getElementById('mPhoto').value = '';
-  document.getElementById('photoPreview').style.display = 'none';
-  photoDataUrl = '';
-  loadMembers();
-}
 
 function renderMembers() {
   const q = document.getElementById('memberSearch').value.trim().toLowerCase();
@@ -189,6 +59,7 @@ function renderMembers() {
   document.getElementById('phoneHeader').style.display = adminOn ? '' : 'none';
   document.getElementById('feeHeader').style.display = adminOn ? '' : 'none';
   document.getElementById('payHeader').style.display = adminOn ? '' : 'none';
+  document.getElementById('actionsHeader').style.display = adminOn ? '' : 'none';
 
   const body = document.getElementById('memberBody');
   const empty = document.getElementById('memberEmpty');
@@ -208,26 +79,164 @@ function renderMembers() {
     } else if (m.PaymentMethod === 'online') {
       payDetail = `অনলাইন · ${m.TransFrom || '—'} → ${m.TransTo || '—'} · ট্রা.নং: ${m.TransactionID || '—'}`;
     }
+    const position = committeeByMember[m.ID];
+    const typeTag = position
+      ? `<span class="tag role">${position}</span>`
+      : `<span class="tag available">সাধারণ সদস্য</span>`;
+    const actions = adminOn ? `
+      <button class="btn small outline" onclick="openEdit('${m.ID}')">এডিট</button>
+      <button class="btn small" style="background:var(--rust);" onclick="removeMember('${m.ID}')">ডিলিট</button>
+    ` : '';
     return `
     <tr>
       <td>${photo}</td>
       <td class="mono">${m.ID}</td>
       <td>${m.Name}<br><span style="color:var(--muted); font-size:0.78rem;">${m.FatherName || ''}</span></td>
-      <td><span class="tag available">${m.MemberType || 'সাধারণ সদস্য'}</span></td>
+      <td>${typeTag}</td>
       <td>${m.Village || '—'}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'};">${m.Phone || '—'}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'};" class="mono">${m.FeeAmount ? '৳' + m.FeeAmount : '—'}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'}; font-size:0.8rem;">${payDetail}</td>
+      <td style="display:${adminOn ? 'table-cell' : 'none'}; white-space:nowrap;">${actions}</td>
     </tr>`;
   }).join('');
 }
 
 async function loadMembers() {
-  allMembers = await Api.get('listMembers');
+  const [members, committee] = await Promise.all([
+    Api.get('listMembers'),
+    Api.get('listCommittee'),
+  ]);
+  allMembers = members;
+  committeeByMember = {};
+  (committee || []).forEach(c => { committeeByMember[c.MemberID] = c.Position; });
   renderMembers();
 }
 
-loadMembers();
+// ---------- এডিট মডাল ----------
+let editPhotoDataUrl = '';
+
+function openEdit(id) {
+  const m = allMembers.find(x => String(x.ID) === String(id));
+  if (!m) return;
+  editPhotoDataUrl = '';
+
+  document.getElementById('editModalRoot').innerHTML = `
+    <div class="modal-backdrop" onclick="closeEdit(event)">
+      <div class="modal" style="max-width:520px;" onclick="event.stopPropagation()">
+        <h3>সদস্যের তথ্য এডিট করুন</h3>
+        <label>আইডি</label>
+        <input value="${m.ID}" disabled />
+        <div class="grid-2">
+          <div><label>নাম</label><input id="eName" value="${m.Name || ''}" /></div>
+          <div><label>বাবার নাম</label><input id="eFather" value="${m.FatherName || ''}" /></div>
+          <div><label>মায়ের নাম</label><input id="eMother" value="${m.MotherName || ''}" /></div>
+          <div><label>গ্রাম</label><input id="eVillage" value="${m.Village || ''}" /></div>
+          <div><label>শিক্ষাগত যোগ্যতা</label><input id="eEducation" value="${m.Education || ''}" /></div>
+          <div><label>ফোন নম্বর</label><input id="ePhone" value="${m.Phone || ''}" /></div>
+        </div>
+
+        <label>ছবি বদলাতে চাইলে নতুন ছবি দিন (না দিলে আগেরটাই থাকবে)</label>
+        <input id="ePhoto" type="file" accept="image/*" onchange="handleEditPhoto(event)" />
+        <img id="editPhotoPreview" src="${m.PhotoURL || ''}" style="display:${m.PhotoURL ? 'block' : 'none'}; margin-top:10px; width:80px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:4px;" />
+
+        <div class="grid-2">
+          <div><label>চাঁদার পরিমাণ (৳)</label><input id="eFee" type="number" min="0" value="${m.FeeAmount || 0}" /></div>
+          <div>
+            <label>পেমেন্ট পদ্ধতি</label>
+            <select id="ePayMethod" onchange="toggleEditPayMethod()">
+              <option value="cash" ${m.PaymentMethod === 'online' ? '' : 'selected'}>ক্যাশ</option>
+              <option value="online" ${m.PaymentMethod === 'online' ? 'selected' : ''}>অনলাইন</option>
+            </select>
+          </div>
+        </div>
+        <div id="eCashWrap" style="display:${m.PaymentMethod === 'online' ? 'none' : 'block'};">
+          <label>কার কাছে জমা দিলেন</label>
+          <input id="eCashReceivedBy" value="${m.CashReceivedBy || ''}" />
+        </div>
+        <div id="eOnlineWrap" style="display:${m.PaymentMethod === 'online' ? 'block' : 'none'};">
+          <div class="grid-2">
+            <div><label>কোন নম্বর হতে</label><input id="eTransFrom" value="${m.TransFrom || ''}" /></div>
+            <div><label>কোন নম্বরে</label><input id="eTransTo" value="${m.TransTo || ''}" /></div>
+          </div>
+          <label>ট্রানজেকশন নম্বর</label>
+          <input id="eTransactionId" value="${m.TransactionID || ''}" />
+        </div>
+
+        <button class="btn brass" style="margin-top:18px;" onclick="saveEdit('${m.ID}')">সংরক্ষণ করুন</button>
+        <button class="btn outline" style="margin-top:18px;" onclick="closeEdit()">বাতিল</button>
+        <div id="eMsg"></div>
+      </div>
+    </div>
+  `;
+}
+
+function closeEdit() { document.getElementById('editModalRoot').innerHTML = ''; }
+
+function toggleEditPayMethod() {
+  const online = document.getElementById('ePayMethod').value === 'online';
+  document.getElementById('eCashWrap').style.display = online ? 'none' : 'block';
+  document.getElementById('eOnlineWrap').style.display = online ? 'block' : 'none';
+}
+
+function handleEditPhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
+      else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      editPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      const preview = document.getElementById('editPhotoPreview');
+      preview.src = editPhotoDataUrl;
+      preview.style.display = 'block';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveEdit(id) {
+  const payMethod = document.getElementById('ePayMethod').value;
+  const payload = {
+    id,
+    name: document.getElementById('eName').value.trim(),
+    fatherName: document.getElementById('eFather').value.trim(),
+    motherName: document.getElementById('eMother').value.trim(),
+    village: document.getElementById('eVillage').value.trim(),
+    education: document.getElementById('eEducation').value.trim(),
+    phone: document.getElementById('ePhone').value.trim(),
+    photo: editPhotoDataUrl,
+    feeAmount: document.getElementById('eFee').value || 0,
+    paymentMethod: payMethod,
+    cashReceivedBy: payMethod === 'cash' ? document.getElementById('eCashReceivedBy').value.trim() : '',
+    transFrom: payMethod === 'online' ? document.getElementById('eTransFrom').value.trim() : '',
+    transTo: payMethod === 'online' ? document.getElementById('eTransTo').value.trim() : '',
+    transactionId: payMethod === 'online' ? document.getElementById('eTransactionId').value.trim() : '',
+  };
+  const msg = document.getElementById('eMsg');
+  if (!payload.name) { msg.innerHTML = `<div class="msg error">নাম আবশ্যক</div>`; return; }
+  const res = await Api.post('updateMember', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  closeEdit();
+  loadMembers();
+}
+
+async function removeMember(id) {
+  if (!confirm(`আইডি ${id} সদস্যকে মুছে ফেলতে চান? (কমিটিতে থাকলে সেখান থেকেও বাদ যাবে)`)) return;
+  await Api.post('deleteMember', { id });
+  loadMembers();
+}
+
+renderRefreshBtn(loadMembers);
+  loadMembers();
 </script>
 </body>
 </html>
