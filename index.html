@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
 <div id="navRoot"></div>
 
 <header class="hero">
@@ -21,30 +20,56 @@
 
 <main class="wrap">
 
-  <section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); margin-bottom:50px;">
-    <a href="books.html" class="index-card" style="display:block;">
-      <h3>📚 বই তালিকা</h3>
-      <p style="color:var(--muted); font-size:0.9rem; margin:0;">কোড, নাম বা লেখক দিয়ে বই খুঁজুন</p>
-    </a>
-    <a href="booking.html" class="index-card" style="display:block;">
-      <h3>🔖 বই বুকিং</h3>
-      <p style="color:var(--muted); font-size:0.9rem; margin:0;">বই নেওয়া ও ফেরতের হিসাব রাখুন</p>
-    </a>
-    <a href="members.html" class="index-card" style="display:block;">
-      <h3>🧑‍🤝‍🧑 সদস্য তালিকা</h3>
-      <p style="color:var(--muted); font-size:0.9rem; margin:0;">সদস্য হোন বা তালিকা দেখুন</p>
-    </a>
-    <a href="notices.html" class="index-card" style="display:block;">
-      <h3>📢 নোটিশ</h3>
-      <p style="color:var(--muted); font-size:0.9rem; margin:0;">সর্বশেষ ঘোষণা ও কর্মসূচি</p>
-    </a>
+  <!-- দ্রুত লিংক -->
+  <section style="margin-bottom:46px;">
+    <div class="section-label">আমাদের সেবাসমূহ</div>
+    <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+      <a href="books.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>📚 বই তালিকা</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">কোড, নাম বা লেখক দিয়ে বই খুঁজুন</p>
+      </a>
+      <a href="booking.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>🔖 বই বুকিং</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">বই নেওয়া ও ফেরতের হিসাব রাখুন</p>
+      </a>
+      <a href="members.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>🧑‍🤝‍🧑 সদস্য তালিকা</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">নিবন্ধিত সদস্যদের তালিকা দেখুন</p>
+      </a>
+      <a href="donations.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>💛 অনুদান</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">অনুদান প্রদান করুন ও তালিকা দেখুন</p>
+      </a>
+      <a href="notices.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>📢 নোটিশ</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">সর্বশেষ ঘোষণা ও কর্মসূচি</p>
+      </a>
+      <a href="projects.html" class="index-card" style="display:block; text-decoration:none;">
+        <h3>🏗️ প্রকল্প</h3>
+        <p style="color:var(--muted); font-size:0.88rem; margin:0;">চলমান উদ্যোগসমূহ</p>
+      </a>
+    </div>
   </section>
 
-  <section id="noticesSection" style="margin-bottom:50px;">
-    <div class="section-label">সাম্প্রতিক নোটিশ</div>
+  <!-- নোটিশ -->
+  <section id="noticesSection" style="margin-bottom:46px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="section-label" style="margin:0;">সাম্প্রতিক নোটিশ</div>
+      <button class="btn small outline" onclick="loadAll()">↺ রিফ্রেশ</button>
+    </div>
     <div id="noticesList"></div>
   </section>
 
+  <!-- কমিটি -->
+  <section id="committeeSection" style="margin-bottom:46px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <div class="section-label" style="margin:0;">পরিচালনা কমিটি</div>
+      <a href="committee.html" class="btn small outline">সম্পূর্ণ দেখুন →</a>
+    </div>
+    <div class="card-grid" id="committeeGrid"></div>
+  </section>
+
+  <!-- প্রকল্প -->
   <section id="projectsSection">
     <div class="section-label">চলমান প্রকল্প</div>
     <div id="projectsList" class="card-grid"></div>
@@ -60,11 +85,15 @@
 <script>
 renderNav('index.html');
 
+async function loadAll() {
+  await Promise.all([loadNotices(), loadCommittee(), loadProjects()]);
+}
+
 async function loadNotices() {
   const notices = await Api.get('listNotices');
   const el = document.getElementById('noticesList');
   if (!Array.isArray(notices) || notices.length === 0) {
-    document.getElementById('noticesSection').style.display = 'none';
+    el.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">কোনো নোটিশ নেই।</p>';
     return;
   }
   el.innerHTML = notices.slice(0, 3).map(n => `
@@ -76,13 +105,36 @@ async function loadNotices() {
   `).join('');
 }
 
+async function loadCommittee() {
+  const committee = await Api.get('listCommittee');
+  const grid = document.getElementById('committeeGrid');
+  if (!committee || committee.length === 0) {
+    document.getElementById('committeeSection').style.display = 'none';
+    return;
+  }
+  document.getElementById('committeeSection').style.display = 'block';
+  grid.innerHTML = committee.map(c => {
+    const photo = c.PhotoURL
+      ? `<img src="${c.PhotoURL}" style="width:72px; height:72px; object-fit:cover; border-radius:50%; border:2px solid var(--brass); margin-bottom:10px;" />`
+      : `<div style="width:72px; height:72px; border-radius:50%; background:var(--line); margin:0 auto 10px;"></div>`;
+    return `
+      <div class="index-card" style="text-align:center;">
+        ${photo}
+        <h3 style="font-size:1rem;">${c.MemberName}</h3>
+        <span class="tag role">${c.Position}</span>
+        <div class="author" style="margin-top:6px;">${c.Village || ''}</div>
+      </div>`;
+  }).join('');
+}
+
 async function loadProjects() {
   const projects = await Api.get('listProjects');
   const el = document.getElementById('projectsList');
-  if (!Array.isArray(projects) || projects.length === 0) {
+  if (!projects || projects.length === 0) {
     document.getElementById('projectsSection').style.display = 'none';
     return;
   }
+  document.getElementById('projectsSection').style.display = 'block';
   el.innerHTML = projects.slice(0, 4).map(p => `
     <div class="index-card">
       <h3>${p.Title}</h3>
@@ -91,8 +143,7 @@ async function loadProjects() {
   `).join('');
 }
 
-loadNotices();
-loadProjects();
+loadAll();
 </script>
 </body>
 </html>
