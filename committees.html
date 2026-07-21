@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>কমিটি — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap">
+  <div class="page-toolbar">
+    <div class="section-label">পরিচালনা কমিটি</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
+
+  <div id="adminBlock" class="admin-only-block" style="display:none;">
+    <span class="admin-badge">অ্যাডমিন — কমিটিতে সদস্য যোগ করুন</span>
+    <div class="grid-2">
+      <div>
+        <label>সদস্য বাছাই করুন</label>
+        <input id="cMemberInput" list="memberOptions" placeholder="নাম বা আইডি লিখে খুঁজুন..." autocomplete="off" />
+        <datalist id="memberOptions"></datalist>
+      </div>
+      <div>
+        <label>পদবি</label>
+        <select id="cPosition" onchange="toggleCustomPosition()">
+          <option value="সভাপতি">সভাপতি</option>
+          <option value="সহ-সভাপতি">সহ-সভাপতি</option>
+          <option value="সাধারণ সম্পাদক">সাধারণ সম্পাদক</option>
+          <option value="সহ-সম্পাদক">সহ-সম্পাদক</option>
+          <option value="কোষাধ্যক্ষ">কোষাধ্যক্ষ</option>
+          <option value="লাইব্রেরিয়ান">লাইব্রেরিয়ান</option>
+          <option value="সহ-লাইব্রেরিয়ান">সহ-লাইব্রেরিয়ান</option>
+          <option value="প্রচার সম্পাদক">প্রচার সম্পাদক</option>
+          <option value="দপ্তর সম্পাদক">দপ্তর সম্পাদক</option>
+          <option value="কার্যকরী সদস্য">কার্যকরী সদস্য</option>
+          <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
+        </select>
+      </div>
+      <div id="customPositionWrap" style="display:none;">
+        <label>পদবি লিখুন</label>
+        <input id="cPositionCustom" placeholder="যেমন: সাংস্কৃতিক সম্পাদক" />
+      </div>
+    </div>
+    <button class="btn brass" style="margin-top:18px;" onclick="addCommittee()">কমিটিতে যোগ করুন</button>
+    <div id="cMsg"></div>
+  </div>
+
+  <div class="card-grid" id="committeeGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">এখনো কমিটি তালিকা তৈরি হয়নি।</div>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('committee.html');
+let allMembers = [];
+
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  loadCommittee();
+}
+
+function toggleCustomPosition() {
+  const isOther = document.getElementById('cPosition').value === 'অন্যান্য';
+  document.getElementById('customPositionWrap').style.display = isOther ? 'block' : 'none';
+}
+
+async function loadMemberOptions() {
+  allMembers = await Api.get('listMembers');
+  document.getElementById('memberOptions').innerHTML = allMembers
+    .map(m => `<option value="${m.Name} (${m.ID})"></option>`)
+    .join('');
+}
+
+function resolveMemberId(text) {
+  const match = text.match(/\(([^)]+)\)\s*$/);
+  if (match) {
+    const id = match[1];
+    if (allMembers.find(m => String(m.ID) === String(id))) return id;
+  }
+  // সরাসরি আইডি লিখে থাকলে
+  const byId = allMembers.find(m => String(m.ID) === text.trim());
+  return byId ? byId.ID : null;
+}
+
+async function addCommittee() {
+  const memberText = document.getElementById('cMemberInput').value.trim();
+  const memberId = resolveMemberId(memberText);
+  const posSelect = document.getElementById('cPosition').value;
+  const position = posSelect === 'অন্যান্য' ? document.getElementById('cPositionCustom').value.trim() : posSelect;
+  const msg = document.getElementById('cMsg');
+
+  if (!memberId) {
+    msg.innerHTML = `<div class="msg error">তালিকা থেকে একজন সঠিক সদস্য বাছাই করুন</div>`;
+    return;
+  }
+  if (!position) {
+    msg.innerHTML = `<div class="msg error">পদবি দিন</div>`;
+    return;
+  }
+  const res = await Api.post('addCommittee', { memberId, position });
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">কমিটিতে যোগ করা হয়েছে</div>`;
+  document.getElementById('cMemberInput').value = '';
+  loadCommittee();
+}
+
+async function loadCommittee() {
+  const committee = await Api.get('listCommittee');
+  const grid = document.getElementById('committeeGrid');
+  const empty = document.getElementById('emptyState');
+  if (!committee || committee.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = committee.map(c => {
+    const photo = c.PhotoURL
+      ? `<img src="${c.PhotoURL}" style="width:64px; height:64px; object-fit:cover; border-radius:50%; border:2px solid var(--brass); margin-bottom:10px;" />`
+      : `<div style="width:64px; height:64px; border-radius:50%; background:var(--line); margin-bottom:10px;"></div>`;
+    const adminButtons = isAdmin()
+      ? `<div class="row-actions"><button class="btn small" style="background:var(--rust);" onclick="removeCommittee('${c.ID}')">ডিলিট</button></div>`
+      : '';
+    return `
+      <div class="index-card" style="text-align:center;">
+        ${photo}
+        <h3>${c.MemberName}</h3>
+        <div class="catid mono" style="margin-bottom:4px;">${c.Position}</div>
+        <div class="author">${c.Village || ''}</div>
+        ${adminButtons}
+      </div>
+    `;
+  }).join('');
+}
+
+async function removeCommittee(id) {
+  if (!confirm('কমিটি থেকে বাদ দিতে চান?')) return;
+  await Api.post('deleteCommittee', { id });
+  async function _refresh() { await Promise.all([loadCommittee(), loadMemberOptions()]); }
+  renderRefreshBtn(_refresh);
+  loadCommittee();
+}
+
+loadMemberOptions();
+onAdminStateChange();
+</script>
+</body>
+</html>
