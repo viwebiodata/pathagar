@@ -11,7 +11,10 @@
 <div id="navRoot"></div>
 
 <main class="wrap">
-  <div class="section-label">প্রকল্পসমূহ</div>
+  <div class="page-toolbar">
+    <div class="section-label">প্রকল্পসমূহ</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
 
   <div id="adminBlock" class="admin-only-block" style="display:none;">
     <span class="admin-badge">অ্যাডমিন — নতুন প্রকল্প</span>
@@ -78,6 +81,7 @@ async function addProject() {
 async function removeProject(id) {
   if (!confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteProject', { id });
+  renderRefreshBtn(loadProjects);
   loadProjects();
 }
 
