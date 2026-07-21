@@ -11,7 +11,10 @@
 <div id="navRoot"></div>
 
 <main class="wrap" style="max-width:760px;">
-  <div class="section-label">নোটিশ বোর্ড</div>
+  <div class="page-toolbar">
+    <div class="section-label">নোটিশ বোর্ড</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
 
   <div id="adminBlock" class="admin-only-block" style="display:none;">
     <span class="admin-badge">অ্যাডমিন — নতুন নোটিশ</span>
@@ -78,6 +81,7 @@ async function addNotice() {
 async function removeNotice(id) {
   if (!confirm('নোটিশটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteNotice', { id });
+  renderRefreshBtn(loadNotices);
   loadNotices();
 }
 
