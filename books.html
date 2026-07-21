@@ -7,34 +7,51 @@
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
 <div id="navRoot"></div>
 
 <main class="wrap">
-  <div class="section-label">বই তালিকা</div>
 
-  <div class="search-row" style="display:flex; gap:10px; margin-bottom:26px;">
-    <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক দিয়ে খুঁজুন..." style="flex:1;" />
-    <button class="btn brass" onclick="doSearch()">খুঁজুন</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+    <div class="section-label" style="margin:0;">বই তালিকা</div>
+    <button class="btn small outline" onclick="loadBooks()">↺ রিফ্রেশ</button>
   </div>
 
-  <div id="adminBlock" class="admin-only-block" style="display:none;">
+  <!-- সার্চ ও ফিল্টার -->
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+    <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক..." style="flex:1; min-width:200px;" oninput="applyFilter()" />
+    <select id="categoryFilter" style="max-width:200px;" onchange="applyFilter()">
+      <option value="">সব ক্যাটাগরি</option>
+    </select>
+    <select id="availFilter" style="max-width:160px;" onchange="applyFilter()">
+      <option value="">সব বই</option>
+      <option value="available">উপলব্ধ</option>
+      <option value="unavailable">বুকিং আছে</option>
+    </select>
+    <button class="btn brass" onclick="applyFilter()">খুঁজুন</button>
+  </div>
+  <div id="filterSummary" style="font-size:0.82rem; color:var(--muted); margin-bottom:18px;"></div>
+
+  <!-- অ্যাডমিন: বই যোগ -->
+  <div id="adminBlock" class="admin-only-block" style="display:none; margin-bottom:26px;">
     <span class="admin-badge">অ্যাডমিন — নতুন বই যোগ করুন</span>
     <div class="grid-2">
       <div><label>কোড</label><input id="bCode" /></div>
       <div><label>বইয়ের নাম</label><input id="bTitle" /></div>
       <div><label>লেখকের নাম</label><input id="bAuthor" /></div>
-      <div><label>বিষয় (ঐচ্ছিক)</label><input id="bCategory" /></div>
+      <div><label>ক্যাটাগরি</label><input id="bCategory" list="catSuggest" placeholder="যেমন: উপন্যাস, ইতিহাস..." />
+        <datalist id="catSuggest"></datalist>
+      </div>
+      <div><label>মোট কপি</label><input id="bCopies" type="number" min="1" value="1" /></div>
     </div>
-    <button class="btn brass" style="margin-top:18px;" onclick="addBook()">যোগ করুন</button>
+    <button class="btn brass" style="margin-top:16px;" onclick="addBook()">বই যোগ করুন</button>
     <div id="bMsg"></div>
   </div>
 
   <div class="card-grid" id="bookGrid"></div>
   <div class="empty-state" id="emptyState" style="display:none;">কোনো বই পাওয়া যায়নি।</div>
+
 </main>
 
-<!-- সম্পাদনার জন্য মডাল -->
 <div id="editModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
@@ -51,24 +68,39 @@ function onAdminStateChange() {
 }
 
 function bookCard(b) {
+  const total = Number(b.TotalCopies) || 1;
+  const available = Number(b.AvailableCopies);
+  const isAvail = available > 0;
+
+  const copyBadge = total > 1
+    ? `<span style="font-size:0.75rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;">${available}/${total} কপি</span>`
+    : '';
+
   const adminButtons = isAdmin() ? `
-    <div class="row-actions">
+    <div class="row-actions" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
       <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
       <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
     </div>` : '';
+
   return `
     <div class="index-card">
       <div class="catid mono">কোড: ${b.Code}${b.Category ? ' · ' + b.Category : ''}</div>
       <h3>${b.Title}</h3>
       <div class="author">লেখক: ${b.Author}</div>
+      <div class="meta-row" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <span class="tag ${isAvail ? 'available' : 'unavailable'}">${isAvail ? 'উপলব্ধ' : 'অনুপলব্ধ'}</span>
+        ${copyBadge}
+      </div>
       ${adminButtons}
-    </div>
-  `;
+    </div>`;
 }
 
 function renderBooks(list) {
   const grid = document.getElementById('bookGrid');
   const empty = document.getElementById('emptyState');
+  document.getElementById('filterSummary').textContent = list.length > 0
+    ? `মোট ${list.length}টি বই পাওয়া গেছে`
+    : '';
   if (!list || list.length === 0) {
     grid.innerHTML = '';
     empty.style.display = 'block';
@@ -78,17 +110,34 @@ function renderBooks(list) {
   grid.innerHTML = list.map(bookCard).join('');
 }
 
-async function loadBooks() {
-  allBooks = await Api.get('listBooks');
-  renderBooks(allBooks);
-}
-
-async function doSearch() {
-  const q = document.getElementById('searchInput').value.trim();
-  const list = q ? await Api.get('listBooks', { q }) : allBooks;
+function applyFilter() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  const avail = document.getElementById('availFilter').value;
+  let list = allBooks;
+  if (q) list = list.filter(b =>
+    String(b.Code).toLowerCase().includes(q) ||
+    String(b.Title).toLowerCase().includes(q) ||
+    String(b.Author).toLowerCase().includes(q)
+  );
+  if (cat) list = list.filter(b => String(b.Category) === cat);
+  if (avail === 'available') list = list.filter(b => Number(b.AvailableCopies) > 0);
+  if (avail === 'unavailable') list = list.filter(b => Number(b.AvailableCopies) === 0);
   renderBooks(list);
 }
-document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function loadBooks() {
+  allBooks = await Api.get('listBooks');
+  // ক্যাটাগরি ড্রপডাউন পপুলেট
+  const cats = [...new Set(allBooks.map(b => b.Category).filter(Boolean))].sort();
+  const sel = document.getElementById('categoryFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + cats.map(c => `<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
+  document.getElementById('catSuggest').innerHTML = cats.map(c => `<option value="${c}"></option>`).join('');
+  applyFilter();
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') applyFilter(); });
 
 async function addBook() {
   const payload = {
@@ -96,16 +145,17 @@ async function addBook() {
     title: document.getElementById('bTitle').value.trim(),
     author: document.getElementById('bAuthor').value.trim(),
     category: document.getElementById('bCategory').value.trim(),
+    totalCopies: document.getElementById('bCopies').value || 1,
   };
   const msg = document.getElementById('bMsg');
   if (!payload.code || !payload.title || !payload.author) {
-    msg.innerHTML = `<div class="msg error">কোড, নাম ও লেখক আবশ্যক</div>`;
-    return;
+    msg.innerHTML = `<div class="msg error">কোড, নাম ও লেখক আবশ্যক</div>`; return;
   }
   const res = await Api.post('addBook', payload);
   if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
   msg.innerHTML = `<div class="msg success">বই যোগ হয়েছে</div>`;
-  ['bCode', 'bTitle', 'bAuthor', 'bCategory'].forEach(id => document.getElementById(id).value = '');
+  ['bCode','bTitle','bAuthor','bCategory'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('bCopies').value = 1;
   loadBooks();
 }
 
@@ -122,19 +172,16 @@ function openEdit(code) {
     <div class="modal-backdrop" onclick="closeEdit(event)">
       <div class="modal" onclick="event.stopPropagation()">
         <h3>বই এডিট করুন</h3>
-        <label>কোড</label>
-        <input value="${book.Code}" disabled />
-        <label>বইয়ের নাম</label>
-        <input id="eTitle" value="${book.Title}" />
-        <label>লেখকের নাম</label>
-        <input id="eAuthor" value="${book.Author}" />
-        <label>বিষয়</label>
-        <input id="eCategory" value="${book.Category || ''}" />
+        <label>কোড</label><input value="${book.Code}" disabled />
+        <label>বইয়ের নাম</label><input id="eTitle" value="${book.Title}" />
+        <label>লেখকের নাম</label><input id="eAuthor" value="${book.Author}" />
+        <label>ক্যাটাগরি</label><input id="eCategory" value="${book.Category || ''}" />
+        <label>মোট কপি</label><input id="eCopies" type="number" min="1" value="${book.TotalCopies || 1}" />
+        <div style="font-size:0.8rem; color:var(--muted); margin-top:6px;">বর্তমানে উপলব্ধ: ${book.AvailableCopies || 0} কপি</div>
         <button class="btn brass" style="margin-top:18px;" onclick="saveEdit('${book.Code}')">সংরক্ষণ করুন</button>
         <button class="btn outline" style="margin-top:18px;" onclick="closeEdit()">বাতিল</button>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 function closeEdit() { document.getElementById('editModalRoot').innerHTML = ''; }
 
@@ -144,6 +191,7 @@ async function saveEdit(code) {
     title: document.getElementById('eTitle').value.trim(),
     author: document.getElementById('eAuthor').value.trim(),
     category: document.getElementById('eCategory').value.trim(),
+    totalCopies: document.getElementById('eCopies').value,
   };
   const res = await Api.post('updateBook', payload);
   if (res.error) { alert(res.error); return; }
