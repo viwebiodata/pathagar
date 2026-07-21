@@ -39,6 +39,30 @@ function toInputDate(d) {
   return date.toISOString().slice(0, 10);
 }
 
+// ---------- রিফ্রেশ বাটন ----------
+function renderRefreshBtn(onRefresh) {
+  const wrap = document.getElementById('refreshBtnRoot');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <button class="btn outline" id="refreshBtn" onclick="handleRefresh()" title="ডেটা আবার লোড করুন">
+      ↻ রিফ্রেশ
+    </button>
+  `;
+  window._pageRefreshFn = onRefresh;
+}
+async function handleRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '↻ লোড হচ্ছে...';
+  try {
+    if (typeof window._pageRefreshFn === 'function') await window._pageRefreshFn();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ রিফ্রেশ';
+  }
+}
+
 // ---------- শেয়ার্ড নেভিগেশন + অ্যাডমিন বার ----------
 function renderNav(active) {
   const items = [
@@ -46,8 +70,11 @@ function renderNav(active) {
     ['books.html', 'বই তালিকা'],
     ['booking.html', 'বই বুকিং'],
     ['members.html', 'সদস্য তালিকা'],
+    ['committee.html', 'কমিটি'],
+    ['register.html', 'নতুন সদস্য হোন'],
     ['notices.html', 'নোটিশ'],
     ['projects.html', 'প্রকল্প'],
+    ['donations.html', 'অনুদান'],
   ];
   const links = items.map(([href, label]) =>
     `<a class="link ${active === href ? 'active' : ''}" href="${href}">${label}</a>`
