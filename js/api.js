@@ -75,6 +75,7 @@ function renderNav(active) {
     ['notices.html', 'নোটিশ'],
     ['projects.html', 'প্রকল্প'],
     ['donations.html', 'অনুদান'],
+    ['finance.html', 'আয়-ব্যয়'],
   ];
   const links = items.map(([href, label]) =>
     `<a class="link ${active === href ? 'active' : ''}" href="${href}">${label}</a>`
