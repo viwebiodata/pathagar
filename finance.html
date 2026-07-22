@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>আয়-ব্যয় — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  .stat-box { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; text-align:center; flex:1; min-width:150px; }
+  .stat-box .label { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:8px; }
+  .stat-box .value { font-family:'Fraunces',serif; font-size:1.9rem; font-weight:700; }
+  .stat-box.income  .value { color:var(--sage); }
+  .stat-box.expense .value { color:var(--rust); }
+  .stat-box.balance-pos .value { color:var(--ink); }
+  .stat-box.balance-neg .value { color:var(--rust); }
+  .income-row  { background:rgba(95,113,97,0.05); }
+  .expense-row { background:rgba(154,59,59,0.04); }
+</style>
+</head>
+<body>
+<div id="navRoot"></div>
+
+<main class="wrap">
+
+  <!-- লগইন প্রম্পট — পাবলিক -->
+  <div id="loginPrompt" style="max-width:440px; margin:60px auto; text-align:center;">
+    <div class="panel">
+      <h3 style="margin-bottom:10px;">🔒 অ্যাডমিন লগইন প্রয়োজন</h3>
+      <p style="color:var(--muted); font-size:0.9rem; margin-bottom:16px;">আয়-ব্যয়ের হিসাব শুধু অ্যাডমিনের জন্য।</p>
+      <button class="btn brass" onclick="openAdminLogin()">অ্যাডমিন লগইন</button>
+    </div>
+  </div>
+
+  <!-- মূল কন্টেন্ট — শুধু অ্যাডমিন -->
+  <div id="mainContent" style="display:none;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px;">
+      <div class="section-label" style="margin:0;">আয়-ব্যয়ের সারসংক্ষেপ</div>
+      <div id="refreshBtnRoot"></div>
+    </div>
+
+    <!-- সারসংক্ষেপ কার্ড -->
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:34px;" id="summaryCards">
+      <div class="stat-box income">
+        <div class="label">মোট আয়</div>
+        <div class="value" id="sIncome">—</div>
+        <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;" id="sIncomeBreak"></div>
+      </div>
+      <div class="stat-box expense">
+        <div class="label">মোট ব্যয়</div>
+        <div class="value" id="sExpense">—</div>
+        <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;" id="sExpenseBreak"></div>
+      </div>
+      <div class="stat-box" id="balanceBox">
+        <div class="label">নিট ব্যালেন্স</div>
+        <div class="value" id="sBalance">—</div>
+        <div style="font-size:0.78rem; color:var(--muted); margin-top:6px;" id="sBalanceNote"></div>
+      </div>
+    </div>
+
+    <!-- আয়ের বিভাজন -->
+    <div class="panel" style="margin-bottom:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:14px;">আয়ের উৎস</div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:160px; padding:14px; background:rgba(95,113,97,0.08); border-radius:var(--radius);">
+          <div style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">সদস্য চাঁদা</div>
+          <div class="mono" style="font-size:1.3rem; font-weight:700; color:var(--sage);" id="sMemberFee">—</div>
+          <div style="font-size:0.75rem; color:var(--muted);" id="sMemberCount"></div>
+        </div>
+        <div style="flex:1; min-width:160px; padding:14px; background:rgba(169,121,60,0.1); border-radius:var(--radius);">
+          <div style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">অনুদান</div>
+          <div class="mono" style="font-size:1.3rem; font-weight:700; color:var(--brass-dark);" id="sDonation">—</div>
+          <div style="font-size:0.75rem; color:var(--muted);" id="sDonationCount"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ব্যয় এন্ট্রি ফর্ম -->
+    <div class="admin-only-block" style="margin-bottom:28px;">
+      <span class="admin-badge">নতুন ব্যয় এন্ট্রি</span>
+      <div class="grid-2">
+        <div>
+          <label>বিবরণ <span style="color:var(--rust);">*</span></label>
+          <input id="eTitle" placeholder="যেমন: বই ক্রয়, বিদ্যুৎ বিল, মেরামত" />
+        </div>
+        <div>
+          <label>পরিমাণ (৳) <span style="color:var(--rust);">*</span></label>
+          <input id="eAmount" type="number" min="1" placeholder="০" />
+        </div>
+        <div>
+          <label>ক্যাটাগরি</label>
+          <select id="eCategory">
+            <option value="">— নির্বাচন করুন —</option>
+            <option value="বই ক্রয়">বই ক্রয়</option>
+            <option value="আসবাবপত্র">আসবাবপত্র</option>
+            <option value="বিদ্যুৎ/পানি">বিদ্যুৎ/পানি</option>
+            <option value="মেরামত">মেরামত</option>
+            <option value="অনুষ্ঠান">অনুষ্ঠান/কর্মসূচি</option>
+            <option value="স্টেশনারি">স্টেশনারি</option>
+            <option value="অন্যান্য">অন্যান্য</option>
+          </select>
+        </div>
+        <div>
+          <label>মন্তব্য (ঐচ্ছিক)</label>
+          <input id="eNote" placeholder="বিস্তারিত বিবরণ" />
+        </div>
+      </div>
+      <div style="margin-top:10px; padding:8px 12px; background:rgba(169,121,60,0.08); border-radius:var(--radius); font-size:0.82rem; color:var(--muted);">
+        📅 তারিখ স্বয়ংক্রিয়: <strong class="mono" id="todayDisplay"></strong>
+      </div>
+      <button class="btn brass" style="margin-top:16px;" onclick="submitExpense()">ব্যয় সংরক্ষণ করুন</button>
+      <div id="eMsg"></div>
+    </div>
+
+    <!-- ব্যয়ের তালিকা -->
+    <div class="section-label">ব্যয়ের তালিকা</div>
+    <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+      <input id="filterExpense" placeholder="বিবরণ দিয়ে খুঁজুন..." style="max-width:240px;" oninput="renderExpenses()" />
+      <select id="filterCat" style="max-width:200px;" onchange="renderExpenses()">
+        <option value="">সব ক্যাটাগরি</option>
+        <option value="বই ক্রয়">বই ক্রয়</option>
+        <option value="আসবাবপত্র">আসবাবপত্র</option>
+        <option value="বিদ্যুৎ/পানি">বিদ্যুৎ/পানি</option>
+        <option value="মেরামত">মেরামত</option>
+        <option value="অনুষ্ঠান">অনুষ্ঠান/কর্মসূচি</option>
+        <option value="স্টেশনারি">স্টেশনারি</option>
+        <option value="অন্যান্য">অন্যান্য</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr><th>তারিখ</th><th>বিবরণ</th><th>ক্যাটাগরি</th><th>পরিমাণ</th><th>মন্তব্য</th><th></th></tr>
+      </thead>
+      <tbody id="expenseBody"></tbody>
+    </table>
+    <div class="empty-state" id="expenseEmpty" style="display:none;">এখনো কোনো ব্যয় এন্ট্রি নেই।</div>
+
+  </div><!-- /mainContent -->
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('finance.html');
+renderRefreshBtn(loadAll);
+document.getElementById('todayDisplay').textContent = fmtDate(new Date());
+
+let allExpenses = [];
+
+function onAdminStateChange() {
+  const on = isAdmin();
+  document.getElementById('loginPrompt').style.display   = on ? 'none'  : 'block';
+  document.getElementById('mainContent').style.display   = on ? 'block' : 'none';
+  if (on) loadAll();
+}
+
+async function loadAll() {
+  await Promise.all([loadSummary(), loadExpenses()]);
+}
+
+async function loadSummary() {
+  const s = await Api.get('getFinanceSummary');
+  if (s.error) return;
+
+  document.getElementById('sIncome').textContent      = '৳' + s.totalIncome.toLocaleString('bn-BD');
+  document.getElementById('sExpense').textContent     = '৳' + s.totalExpense.toLocaleString('bn-BD');
+  document.getElementById('sMemberFee').textContent   = '৳' + s.memberFees.toLocaleString('bn-BD');
+  document.getElementById('sMemberCount').textContent = `${s.memberCount} জন সদস্য`;
+  document.getElementById('sDonation').textContent    = '৳' + s.donationTotal.toLocaleString('bn-BD');
+  document.getElementById('sDonationCount').textContent = `${s.donationCount}টি অনুদান`;
+  document.getElementById('sIncomeBreak').textContent  = `চাঁদা + অনুদান`;
+  document.getElementById('sExpenseBreak').textContent = `${s.expenseCount}টি এন্ট্রি`;
+
+  const bal = s.balance;
+  document.getElementById('sBalance').textContent     = (bal < 0 ? '−৳' : '৳') + Math.abs(bal).toLocaleString('bn-BD');
+  document.getElementById('sBalanceNote').textContent = bal >= 0 ? 'উদ্বৃত্ত' : 'ঘাটতি';
+  const box = document.getElementById('balanceBox');
+  box.className = 'stat-box ' + (bal >= 0 ? 'balance-pos' : 'balance-neg');
+}
+
+async function loadExpenses() {
+  allExpenses = await Api.get('listExpenses') || [];
+  renderExpenses();
+}
+
+function renderExpenses() {
+  const q   = document.getElementById('filterExpense')?.value.trim().toLowerCase() || '';
+  const cat = document.getElementById('filterCat')?.value || '';
+  let list  = allExpenses;
+  if (q)   list = list.filter(e => String(e.Title).toLowerCase().includes(q));
+  if (cat) list = list.filter(e => e.Category === cat);
+
+  const body  = document.getElementById('expenseBody');
+  const empty = document.getElementById('expenseEmpty');
+  if (list.length === 0) { body.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = list.map(e => `
+    <tr class="expense-row">
+      <td class="mono" style="white-space:nowrap;">${fmtDate(e.Date)}</td>
+      <td><strong>${e.Title}</strong></td>
+      <td><span class="tag" style="background:rgba(154,59,59,0.1); color:var(--rust);">${e.Category || '—'}</span></td>
+      <td class="mono" style="color:var(--rust); font-weight:700;">৳${Number(e.Amount).toLocaleString('bn-BD')}</td>
+      <td style="font-size:0.85rem; color:var(--muted);">${e.Note || '—'}</td>
+      <td><button class="btn small" style="background:var(--rust);" onclick="removeExpense('${e.ID}')">ডিলিট</button></td>
+    </tr>`).join('');
+}
+
+async function submitExpense() {
+  const payload = {
+    title:    document.getElementById('eTitle').value.trim(),
+    amount:   document.getElementById('eAmount').value,
+    category: document.getElementById('eCategory').value,
+    note:     document.getElementById('eNote').value.trim(),
+  };
+  const msg = document.getElementById('eMsg');
+  if (!payload.title)  { msg.innerHTML = `<div class="msg error">বিবরণ আবশ্যক</div>`; return; }
+  if (!payload.amount || Number(payload.amount) <= 0) { msg.innerHTML = `<div class="msg error">সঠিক পরিমাণ দিন</div>`; return; }
+
+  const res = await Api.post('addExpense', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  msg.innerHTML = `<div class="msg success">ব্যয় এন্ট্রি সংরক্ষিত হয়েছে</div>`;
+  ['eTitle','eAmount','eNote'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('eCategory').value = '';
+  loadAll();
+}
+
+async function removeExpense(id) {
+  if (!confirm('এই ব্যয় এন্ট্রিটি মুছে ফেলতে চান?')) return;
+  await Api.post('deleteExpense', { id });
+  loadAll();
+}
+
+onAdminStateChange();
+</script>
+</body>
+</html>
