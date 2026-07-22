@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>নতুন সদস্য হোন — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="navRoot"></div>
+
+<main class="wrap" style="max-width:800px;">
+
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px;">
+    <div class="section-label" style="margin:0;">নতুন সদস্য রেজিস্ট্রেশন</div>
+  </div>
+
+  <div class="panel">
+
+    <div class="grid-2">
+      <div>
+        <label>নাম <span style="color:var(--rust);">*</span></label>
+        <input id="mName" placeholder="পূর্ণ নাম" />
+      </div>
+      <div>
+        <label>বাবার নাম</label>
+        <input id="mFather" />
+      </div>
+      <div>
+        <label>মায়ের নাম</label>
+        <input id="mMother" />
+      </div>
+      <div>
+        <label>গ্রাম / ঠিকানা</label>
+        <input id="mVillage" />
+      </div>
+      <div>
+        <label>জন্ম তারিখ</label>
+        <input id="mDob" type="date" />
+      </div>
+      <div>
+        <label>ফোন নম্বর <span style="color:var(--rust);">*</span></label>
+        <input id="mPhone" placeholder="01XXXXXXXXX" />
+      </div>
+      <div>
+        <label>শিক্ষাগত যোগ্যতা</label>
+        <input id="mEducation" placeholder="যেমন: এসএসসি, বিএ" />
+      </div>
+      <div>
+        <label>রক্তের গ্রুপ</label>
+        <select id="mBlood">
+          <option value="">— নির্বাচন করুন —</option>
+          <option value="A+">A+</option>
+          <option value="A-">A-</option>
+          <option value="B+">B+</option>
+          <option value="B-">B-</option>
+          <option value="AB+">AB+</option>
+          <option value="AB-">AB-</option>
+          <option value="O+">O+</option>
+          <option value="O-">O-</option>
+        </select>
+      </div>
+      <div>
+        <label>ধর্ম</label>
+        <select id="mReligion">
+          <option value="">— নির্বাচন করুন —</option>
+          <option value="ইসলাম">ইসলাম</option>
+          <option value="হিন্দু">হিন্দু</option>
+          <option value="বৌদ্ধ">বৌদ্ধ</option>
+          <option value="খ্রিস্টান">খ্রিস্টান</option>
+          <option value="অন্যান্য">অন্যান্য</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="margin-top:18px;">সদস্যের ছবি</label>
+    <input id="mPhoto" type="file" accept="image/*" onchange="handlePhoto(event)" />
+    <img id="photoPreview" style="display:none; margin-top:10px; width:90px; height:90px; object-fit:cover; border:1px solid var(--line); border-radius:4px;" />
+
+    <hr style="border:none; border-top:1px solid var(--line); margin:22px 0 10px;" />
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:12px;">চাঁদার তথ্য</div>
+
+    <div class="grid-2">
+      <div>
+        <label>চাঁদার পরিমাণ (৳)</label>
+        <input id="mFee" type="number" min="0" placeholder="০" />
+      </div>
+      <div>
+        <label>পেমেন্ট পদ্ধতি</label>
+        <select id="mPayMethod" onchange="togglePayMethod()">
+          <option value="cash">ক্যাশ</option>
+          <option value="online">অনলাইন</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cashWrap">
+      <label>কার কাছে জমা দিলেন</label>
+      <input id="mCashReceivedBy" placeholder="যার কাছে টাকা জমা দেওয়া হয়েছে তার নাম" />
+    </div>
+    <div id="onlineWrap" style="display:none;">
+      <div class="grid-2">
+        <div><label>কোন নম্বর হতে</label><input id="mTransFrom" /></div>
+        <div><label>কোন নম্বরে</label><input id="mTransTo" /></div>
+      </div>
+      <label>ট্রানজেকশন নম্বর <span style="color:var(--rust);">*</span></label>
+      <input id="mTransactionId" placeholder="যেমন: 8N7K2X9P1Q" />
+    </div>
+
+    <button class="btn brass" style="margin-top:24px; width:100%; padding:14px;" onclick="registerMember()">সদস্য হিসেবে নিবন্ধন করুন</button>
+    <div id="regMsg"></div>
+  </div>
+
+  <p style="margin-top:16px; color:var(--muted); font-size:0.85rem;">
+    নিবন্ধন সম্পন্ন হলে একটা সদস্য আইডি পাবেন — সেটা দিয়েই পরে বই বুকিং করা যাবে।
+    কমিটিতে পদবি (সভাপতি/সম্পাদক ইত্যাদি) অ্যাডমিন পরে
+    <a href="committee.html" style="color:var(--brass-dark); font-weight:600;">কমিটি পাতা</a> থেকে যুক্ত করে দেবেন।
+  </p>
+</main>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('register.html');
+
+function togglePayMethod() {
+  const online = document.getElementById('mPayMethod').value === 'online';
+  document.getElementById('cashWrap').style.display = online ? 'none' : 'block';
+  document.getElementById('onlineWrap').style.display = online ? 'block' : 'none';
+}
+
+let photoDataUrl = '';
+function handlePhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) { photoDataUrl = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
+      else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      photoDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      const preview = document.getElementById('photoPreview');
+      preview.src = photoDataUrl;
+      preview.style.display = 'block';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function registerMember() {
+  const payMethod = document.getElementById('mPayMethod').value;
+  const payload = {
+    name:           document.getElementById('mName').value.trim(),
+    fatherName:     document.getElementById('mFather').value.trim(),
+    motherName:     document.getElementById('mMother').value.trim(),
+    village:        document.getElementById('mVillage').value.trim(),
+    dob:            document.getElementById('mDob').value,
+    education:      document.getElementById('mEducation').value.trim(),
+    bloodGroup:     document.getElementById('mBlood').value,
+    religion:       document.getElementById('mReligion').value,
+    phone:          document.getElementById('mPhone').value.trim(),
+    photo:          photoDataUrl,
+    feeAmount:      document.getElementById('mFee').value || 0,
+    paymentMethod:  payMethod,
+    cashReceivedBy: payMethod === 'cash' ? document.getElementById('mCashReceivedBy').value.trim() : '',
+    transFrom:      payMethod === 'online' ? document.getElementById('mTransFrom').value.trim() : '',
+    transTo:        payMethod === 'online' ? document.getElementById('mTransTo').value.trim() : '',
+    transactionId:  payMethod === 'online' ? document.getElementById('mTransactionId').value.trim() : '',
+  };
+
+  const msg = document.getElementById('regMsg');
+  if (!payload.name) { msg.innerHTML = `<div class="msg error">নাম আবশ্যক</div>`; return; }
+  if (!payload.phone) { msg.innerHTML = `<div class="msg error">ফোন নম্বর আবশ্যক</div>`; return; }
+  if (payMethod === 'online' && !payload.transactionId) {
+    msg.innerHTML = `<div class="msg error">অনলাইন পেমেন্টে ট্রানজেকশন নম্বর আবশ্যক</div>`; return;
+  }
+
+  msg.innerHTML = `<div class="msg success">সংরক্ষণ করা হচ্ছে...</div>`;
+  const res = await Api.post('registerMember', payload);
+  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+
+  msg.innerHTML = `
+    <div class="msg success" style="font-size:1rem; padding:16px;">
+      ✅ নিবন্ধন সম্পন্ন হয়েছে!<br>
+      আপনার সদস্য আইডি: <strong class="mono" style="font-size:1.2rem;">${res.id}</strong><br>
+      <span style="font-size:0.85rem; opacity:0.8;">বই বুকিং এর সময় এই আইডি ব্যবহার করুন — নোট করে রাখুন।</span>
+    </div>`;
+
+  // ফর্ম রিসেট
+  ['mName','mFather','mMother','mVillage','mEducation','mPhone',
+   'mFee','mCashReceivedBy','mTransFrom','mTransTo','mTransactionId']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mDob').value = '';
+  document.getElementById('mBlood').value = '';
+  document.getElementById('mReligion').value = '';
+  document.getElementById('mPhoto').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  photoDataUrl = '';
+}
+</script>
+</body>
+</html>
