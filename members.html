@@ -21,18 +21,19 @@
     <a href="register.html" class="btn brass" style="white-space:nowrap;">+ নতুন সদস্য যোগ করুন</a>
   </div>
 
-  <table>
+  <div class="table-scroll"><table>
     <thead>
       <tr>
-        <th>ছবি</th><th>আইডি</th><th>নাম</th><th>ধরন</th><th>গ্রাম</th>
+        <th>ছবি</th><th>আইডি</th><th>নাম</th><th>ধরন</th><th>গ্রাম</th><th>রক্তের গ্রুপ</th>
         <th id="phoneHeader" style="display:none;">ফোন</th>
+        <th id="dobHeader" style="display:none;">জন্ম তারিখ</th>
         <th id="feeHeader" style="display:none;">চাঁদা</th>
         <th id="payHeader" style="display:none;">পেমেন্ট বিবরণ</th>
         <th id="actionsHeader" style="display:none;"></th>
       </tr>
     </thead>
     <tbody id="memberBody"></tbody>
-  </table>
+  </table></div>
   <div class="empty-state" id="memberEmpty" style="display:none;">কোনো সদস্য নেই।</div>
 </main>
 
@@ -57,6 +58,7 @@ function renderMembers() {
 
   const adminOn = isAdmin();
   document.getElementById('phoneHeader').style.display = adminOn ? '' : 'none';
+  document.getElementById('dobHeader').style.display = adminOn ? '' : 'none';
   document.getElementById('feeHeader').style.display = adminOn ? '' : 'none';
   document.getElementById('payHeader').style.display = adminOn ? '' : 'none';
   document.getElementById('actionsHeader').style.display = adminOn ? '' : 'none';
@@ -94,7 +96,9 @@ function renderMembers() {
       <td>${m.Name}<br><span style="color:var(--muted); font-size:0.78rem;">${m.FatherName || ''}</span></td>
       <td>${typeTag}</td>
       <td>${m.Village || '—'}</td>
+      <td><span class="mono" style="font-size:0.82rem; color:var(--rust);">${m.BloodGroup || '—'}</span></td>
       <td style="display:${adminOn ? 'table-cell' : 'none'};">${m.Phone || '—'}</td>
+      <td style="display:${adminOn ? 'table-cell' : 'none'};" class="mono" style="font-size:0.8rem;">${m.DOB ? fmtDate(m.DOB) : '—'}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'};" class="mono">${m.FeeAmount ? '৳' + m.FeeAmount : '—'}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'}; font-size:0.8rem;">${payDetail}</td>
       <td style="display:${adminOn ? 'table-cell' : 'none'}; white-space:nowrap;">${actions}</td>
@@ -131,8 +135,23 @@ function openEdit(id) {
           <div><label>নাম</label><input id="eName" value="${m.Name || ''}" /></div>
           <div><label>বাবার নাম</label><input id="eFather" value="${m.FatherName || ''}" /></div>
           <div><label>মায়ের নাম</label><input id="eMother" value="${m.MotherName || ''}" /></div>
-          <div><label>গ্রাম</label><input id="eVillage" value="${m.Village || ''}" /></div>
+          <div><label>গ্রাম / ঠিকানা</label><input id="eVillage" value="${m.Village || ''}" /></div>
+          <div><label>জন্ম তারিখ</label><input id="eDob" type="date" value="${m.DOB || ''}" /></div>
           <div><label>শিক্ষাগত যোগ্যতা</label><input id="eEducation" value="${m.Education || ''}" /></div>
+          <div>
+            <label>রক্তের গ্রুপ</label>
+            <select id="eBlood">
+              <option value="">— নির্বাচন করুন —</option>
+              ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(g => `<option value="${g}" ${m.BloodGroup===g?'selected':''}>${g}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label>ধর্ম</label>
+            <select id="eReligion">
+              <option value="">— নির্বাচন করুন —</option>
+              ${['ইসলাম','হিন্দু','বৌদ্ধ','খ্রিস্টান','অন্যান্য'].map(r => `<option value="${r}" ${m.Religion===r?'selected':''}>${r}</option>`).join('')}
+            </select>
+          </div>
           <div><label>ফোন নম্বর</label><input id="ePhone" value="${m.Phone || ''}" /></div>
         </div>
 
@@ -207,19 +226,22 @@ async function saveEdit(id) {
   const payMethod = document.getElementById('ePayMethod').value;
   const payload = {
     id,
-    name: document.getElementById('eName').value.trim(),
-    fatherName: document.getElementById('eFather').value.trim(),
-    motherName: document.getElementById('eMother').value.trim(),
-    village: document.getElementById('eVillage').value.trim(),
-    education: document.getElementById('eEducation').value.trim(),
-    phone: document.getElementById('ePhone').value.trim(),
-    photo: editPhotoDataUrl,
-    feeAmount: document.getElementById('eFee').value || 0,
-    paymentMethod: payMethod,
+    name:           document.getElementById('eName').value.trim(),
+    fatherName:     document.getElementById('eFather').value.trim(),
+    motherName:     document.getElementById('eMother').value.trim(),
+    village:        document.getElementById('eVillage').value.trim(),
+    dob:            document.getElementById('eDob').value,
+    education:      document.getElementById('eEducation').value.trim(),
+    bloodGroup:     document.getElementById('eBlood').value,
+    religion:       document.getElementById('eReligion').value,
+    phone:          document.getElementById('ePhone').value.trim(),
+    photo:          editPhotoDataUrl,
+    feeAmount:      document.getElementById('eFee').value || 0,
+    paymentMethod:  payMethod,
     cashReceivedBy: payMethod === 'cash' ? document.getElementById('eCashReceivedBy').value.trim() : '',
-    transFrom: payMethod === 'online' ? document.getElementById('eTransFrom').value.trim() : '',
-    transTo: payMethod === 'online' ? document.getElementById('eTransTo').value.trim() : '',
-    transactionId: payMethod === 'online' ? document.getElementById('eTransactionId').value.trim() : '',
+    transFrom:      payMethod === 'online' ? document.getElementById('eTransFrom').value.trim() : '',
+    transTo:        payMethod === 'online' ? document.getElementById('eTransTo').value.trim() : '',
+    transactionId:  payMethod === 'online' ? document.getElementById('eTransactionId').value.trim() : '',
   };
   const msg = document.getElementById('eMsg');
   if (!payload.name) { msg.innerHTML = `<div class="msg error">নাম আবশ্যক</div>`; return; }
