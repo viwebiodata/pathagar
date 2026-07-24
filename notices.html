@@ -5,23 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>নোটিশ — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+.notice-item { border-left: 3px solid var(--brass); background: var(--card); margin-bottom: 10px; border-radius: 0 var(--radius) var(--radius) 0; overflow: hidden; }
+.notice-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; cursor: pointer; gap: 12px; }
+.notice-header:hover { background: rgba(169,121,60,0.05); }
+.notice-title-block { flex: 1; }
+.notice-date { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 3px; }
+.notice-title { font-weight: 600; font-size: 0.97rem; color: var(--ink); }
+.notice-toggle { font-size: 0.8rem; color: var(--brass-dark); white-space: nowrap; padding-top: 2px; flex-shrink: 0; }
+.notice-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s; }
+.notice-body.open { max-height: 600px; padding: 0 16px 14px; }
+.notice-body-inner { padding-top: 10px; border-top: 1px dashed var(--line); font-size: 0.93rem; line-height: 1.7; }
+/* প্রথম নোটিশ — সরাসরি খোলা */
+.notice-item.featured { border-left-color: var(--ink); }
+.notice-item.featured .notice-title { font-size: 1.05rem; }
+</style>
 </head>
 <body>
 
 <div id="navRoot"></div>
 
 <main class="wrap" style="max-width:760px;">
-  <div class="page-toolbar">
-    <div class="section-label">নোটিশ বোর্ড</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px;">
+    <div class="section-label" style="margin:0;">নোটিশ বোর্ড</div>
     <div id="refreshBtnRoot"></div>
   </div>
 
   <div id="adminBlock" class="admin-only-block" style="display:none;">
-    <span class="admin-badge">অ্যাডমিন — নতুন নোটিশ</span>
+    <span class="admin-badge">নতুন নোটিশ প্রকাশ করুন</span>
     <label>শিরোনাম</label>
-    <input id="nTitle" />
+    <input id="nTitle" placeholder="নোটিশের শিরোনাম" />
     <label>বিস্তারিত</label>
-    <textarea id="nContent" rows="3"></textarea>
+    <textarea id="nContent" rows="4" style="resize:vertical;"></textarea>
     <button class="btn brass" style="margin-top:18px;" onclick="addNotice()">প্রকাশ করুন</button>
     <div id="nMsg"></div>
   </div>
@@ -37,10 +52,18 @@
 <script src="js/api.js"></script>
 <script>
 renderNav('notices.html');
+renderRefreshBtn(loadNotices);
 
 function onAdminStateChange() {
   document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
   loadNotices();
+}
+
+function toggleNotice(id) {
+  const body = document.getElementById('nb-' + id);
+  const icon = document.getElementById('ni-' + id);
+  const open = body.classList.toggle('open');
+  icon.textContent = open ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন';
 }
 
 async function loadNotices() {
@@ -48,24 +71,37 @@ async function loadNotices() {
   const el = document.getElementById('noticesList');
   const empty = document.getElementById('emptyState');
   if (!notices || notices.length === 0) {
-    el.innerHTML = '';
-    empty.style.display = 'block';
-    return;
+    el.innerHTML = ''; empty.style.display = 'block'; return;
   }
   empty.style.display = 'none';
-  el.innerHTML = notices.map(n => `
-    <div class="notice">
-      <div class="date">${fmtDate(n.Date)}</div>
-      <strong>${n.Title}</strong>
-      <div>${n.Content}</div>
-      ${isAdmin() ? `<div class="row-actions"><button class="btn small" style="background:var(--rust);" onclick="removeNotice('${n.ID}')">ডিলিট</button></div>` : ''}
-    </div>
-  `).join('');
+
+  el.innerHTML = notices.map((n, idx) => {
+    const isFeatured = idx === 0; // সর্বশেষ নোটিশ — সরাসরি খোলা থাকবে
+    const adminBtn = isAdmin()
+      ? `<button class="btn small" style="background:var(--rust); margin-top:12px;" onclick="event.stopPropagation(); removeNotice('${n.ID}')">ডিলিট</button>`
+      : '';
+    return `
+      <div class="notice-item ${isFeatured ? 'featured' : ''}">
+        <div class="notice-header" onclick="toggleNotice('${n.ID}')">
+          <div class="notice-title-block">
+            <div class="notice-date">${fmtDate(n.Date)}</div>
+            <div class="notice-title">${n.Title}</div>
+          </div>
+          <span class="notice-toggle" id="ni-${n.ID}">${isFeatured ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন'}</span>
+        </div>
+        <div class="notice-body ${isFeatured ? 'open' : ''}" id="nb-${n.ID}">
+          <div class="notice-body-inner">
+            ${n.Content}
+            ${adminBtn}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 async function addNotice() {
   const payload = {
-    title: document.getElementById('nTitle').value.trim(),
+    title:   document.getElementById('nTitle').value.trim(),
     content: document.getElementById('nContent').value.trim(),
   };
   const msg = document.getElementById('nMsg');
@@ -81,7 +117,6 @@ async function addNotice() {
 async function removeNotice(id) {
   if (!confirm('নোটিশটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteNotice', { id });
-  renderRefreshBtn(loadNotices);
   loadNotices();
 }
 
