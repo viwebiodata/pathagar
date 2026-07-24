@@ -5,28 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>প্রকল্প — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+.project-item { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--brass); margin-bottom: 12px; border-radius: var(--radius); overflow: hidden; }
+.project-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 18px; cursor: pointer; gap: 12px; }
+.project-header:hover { background: rgba(169,121,60,0.05); }
+.project-title-block { flex: 1; }
+.project-date { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+.project-title { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
+.project-toggle { font-size: 0.8rem; color: var(--brass-dark); white-space: nowrap; flex-shrink: 0; padding-top: 4px; }
+.project-body { padding: 0 18px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s; }
+.project-body.open { max-height: 600px; padding: 0 18px 16px; }
+.project-body-inner { padding-top: 12px; border-top: 1px dashed var(--line); font-size: 0.93rem; line-height: 1.75; color: var(--text); }
+.project-item.featured .project-title { color: var(--brass-dark); }
+</style>
 </head>
 <body>
 
 <div id="navRoot"></div>
 
-<main class="wrap">
-  <div class="page-toolbar">
-    <div class="section-label">প্রকল্পসমূহ</div>
+<main class="wrap" style="max-width:760px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px;">
+    <div class="section-label" style="margin:0;">প্রকল্পসমূহ</div>
     <div id="refreshBtnRoot"></div>
   </div>
 
   <div id="adminBlock" class="admin-only-block" style="display:none;">
-    <span class="admin-badge">অ্যাডমিন — নতুন প্রকল্প</span>
+    <span class="admin-badge">নতুন প্রকল্প যোগ করুন</span>
     <label>শিরোনাম</label>
-    <input id="pTitle" />
+    <input id="pTitle" placeholder="প্রকল্পের নাম" />
     <label>বিবরণ</label>
-    <textarea id="pDescription" rows="3"></textarea>
+    <textarea id="pDescription" rows="4" style="resize:vertical;"></textarea>
     <button class="btn brass" style="margin-top:18px;" onclick="addProject()">যোগ করুন</button>
     <div id="pMsg"></div>
   </div>
 
-  <div class="card-grid" id="projectGrid"></div>
+  <div id="projectList"></div>
   <div class="empty-state" id="emptyState" style="display:none;">এখনো কোনো প্রকল্প যোগ করা হয়নি।</div>
 </main>
 
@@ -37,35 +50,56 @@
 <script src="js/api.js"></script>
 <script>
 renderNav('projects.html');
+renderRefreshBtn(loadProjects);
 
 function onAdminStateChange() {
   document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
   loadProjects();
 }
 
+function toggleProject(id) {
+  const body = document.getElementById('pb-' + id);
+  const icon = document.getElementById('pi-' + id);
+  const open = body.classList.toggle('open');
+  icon.textContent = open ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন';
+}
+
 async function loadProjects() {
   const projects = await Api.get('listProjects');
-  const el = document.getElementById('projectGrid');
+  const el = document.getElementById('projectList');
   const empty = document.getElementById('emptyState');
   if (!projects || projects.length === 0) {
-    el.innerHTML = '';
-    empty.style.display = 'block';
-    return;
+    el.innerHTML = ''; empty.style.display = 'block'; return;
   }
   empty.style.display = 'none';
-  el.innerHTML = projects.map(p => `
-    <div class="index-card">
-      <div class="catid mono">${fmtDate(p.Date)}</div>
-      <h3>${p.Title}</h3>
-      <p style="color:var(--muted); font-size:0.9rem;">${p.Description || ''}</p>
-      ${isAdmin() ? `<div class="row-actions"><button class="btn small" style="background:var(--rust);" onclick="removeProject('${p.ID}')">ডিলিট</button></div>` : ''}
-    </div>
-  `).join('');
+
+  el.innerHTML = projects.map((p, idx) => {
+    const isFeatured = idx === 0;
+    const adminBtn = isAdmin()
+      ? `<button class="btn small" style="background:var(--rust); margin-top:12px;" onclick="event.stopPropagation(); removeProject('${p.ID}')">ডিলিট</button>`
+      : '';
+    return `
+      <div class="project-item ${isFeatured ? 'featured' : ''}">
+        <div class="project-header" onclick="toggleProject('${p.ID}')">
+          <div class="project-title-block">
+            <div class="project-date">${fmtDate(p.Date)}</div>
+            <div class="project-title">${p.Title}</div>
+          </div>
+          <span class="project-toggle" id="pi-${p.ID}">${isFeatured ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন'}</span>
+        </div>
+        <div class="project-body ${isFeatured ? 'open' : ''}" id="pb-${p.ID}">
+          <div class="project-body-inner">
+            ${p.Description || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
+            ${adminBtn}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 async function addProject() {
   const payload = {
-    title: document.getElementById('pTitle').value.trim(),
+    title:       document.getElementById('pTitle').value.trim(),
     description: document.getElementById('pDescription').value.trim(),
   };
   const msg = document.getElementById('pMsg');
@@ -81,7 +115,6 @@ async function addProject() {
 async function removeProject(id) {
   if (!confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteProject', { id });
-  renderRefreshBtn(loadProjects);
   loadProjects();
 }
 
