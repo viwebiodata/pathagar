@@ -226,7 +226,7 @@ th { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; text-transform:
 /* ---------- Admin login modal ---------- */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(28,43,57,0.55);
-  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
 }
 .modal { background: var(--card); border-radius: var(--radius); padding: 26px; max-width: 340px; width: 100%; }
 
@@ -236,4 +236,30 @@ th { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; text-transform:
 @media (max-width: 640px) {
   .grid-2 { grid-template-columns: 1fr; }
   .wrap { padding: 24px 16px 60px; }
+}
+
+/* ---------- page-toolbar (section label + refresh row) ---------- */
+.page-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.page-toolbar .section-label { margin: 0; }
+
+/* ---------- মোবাইল টেবিল স্ক্রোল ---------- */
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  table { min-width: 560px; }
+  .card-grid { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: 1.5rem; }
+  .hero { padding: 36px 18px 30px; }
+  .stat-box .value { font-size: 1.4rem; }
+  input, select, textarea { font-size: 16px; } /* iOS zoom ঠেকানো */
+}
+@media (max-width: 400px) {
+  .card-grid { grid-template-columns: 1fr; }
+  .nav .brand { font-size: 0.82rem; }
 }
