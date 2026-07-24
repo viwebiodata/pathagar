@@ -5,53 +5,128 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>বই তালিকা — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  /* ক্রপ UI */
+  .crop-wrap { position:relative; width:100%; max-width:340px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:#111; display:none; }
+  .crop-wrap img { display:block; width:100%; }
+  .crop-box { position:absolute; border:2px solid var(--brass); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move; touch-action:none; }
+  .crop-handle { position:absolute; width:12px; height:12px; background:var(--brass); border-radius:50%; right:-6px; bottom:-6px; cursor:se-resize; touch-action:none; }
+
+  /* বই কার্ড কভার */
+  .book-cover { width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:var(--radius); border:1px solid var(--line); margin-bottom:10px; background:var(--line); }
+  .book-cover-placeholder { width:100%; aspect-ratio:3/4; background:linear-gradient(135deg,var(--line) 0%,var(--paper) 100%); border-radius:var(--radius); margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:2rem; }
+
+  /* পরিসংখ্যান ট্যাব */
+  .tabs { display:flex; gap:0; margin-bottom:22px; border-bottom:2px solid var(--line); }
+  .tab-btn { background:none; border:none; padding:10px 20px; font-family:'Hind Siliguri',sans-serif; font-size:0.9rem; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; }
+  .tab-btn.active { color:var(--brass-dark); border-bottom-color:var(--brass); font-weight:600; }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+  .rank-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .rank-num { font-family:'IBM Plex Mono',monospace; font-size:1rem; color:var(--muted); min-width:24px; }
+  .rank-cover { width:36px; height:48px; object-fit:cover; border-radius:2px; border:1px solid var(--line); background:var(--line); flex-shrink:0; }
+  .rank-info { flex:1; }
+  .rank-info strong { display:block; font-size:0.92rem; }
+  .rank-info span { color:var(--muted); font-size:0.8rem; }
+  .rank-badge { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; background:rgba(169,121,60,0.15); color:var(--brass-dark); padding:3px 10px; border-radius:20px; white-space:nowrap; }
+</style>
 </head>
 <body>
 <div id="navRoot"></div>
 
 <main class="wrap">
 
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+  <!-- ট্যাব নেভিগেশন -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
     <div class="section-label" style="margin:0;">বই তালিকা</div>
-    <button class="btn small outline" onclick="loadBooks()">↺ রিফ্রেশ</button>
+    <div id="refreshBtnRoot"></div>
   </div>
 
-  <!-- সার্চ ও ফিল্টার -->
-  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-    <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক..." style="flex:1; min-width:200px;" oninput="applyFilter()" />
-    <select id="categoryFilter" style="max-width:200px;" onchange="applyFilter()">
-      <option value="">সব ক্যাটাগরি</option>
-    </select>
-    <select id="availFilter" style="max-width:160px;" onchange="applyFilter()">
-      <option value="">সব বই</option>
-      <option value="available">উপলব্ধ</option>
-      <option value="unavailable">বুকিং আছে</option>
-    </select>
-    <button class="btn brass" onclick="applyFilter()">খুঁজুন</button>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('catalog')">📚 ক্যাটালগ</button>
+    <button class="tab-btn" onclick="switchTab('stats')">📊 পঠন পরিসংখ্যান</button>
   </div>
-  <div id="filterSummary" style="font-size:0.82rem; color:var(--muted); margin-bottom:18px;"></div>
 
-  <!-- অ্যাডমিন: বই যোগ -->
-  <div id="adminBlock" class="admin-only-block" style="display:none; margin-bottom:26px;">
-    <span class="admin-badge">অ্যাডমিন — নতুন বই যোগ করুন</span>
-    <div class="grid-2">
-      <div><label>কোড</label><input id="bCode" /></div>
-      <div><label>বইয়ের নাম</label><input id="bTitle" /></div>
-      <div><label>লেখকের নাম</label><input id="bAuthor" /></div>
-      <div><label>ক্যাটাগরি</label><input id="bCategory" list="catSuggest" placeholder="যেমন: উপন্যাস, ইতিহাস..." />
-        <datalist id="catSuggest"></datalist>
-      </div>
-      <div><label>মোট কপি</label><input id="bCopies" type="number" min="1" value="1" /></div>
+  <!-- ক্যাটালগ ট্যাব -->
+  <div id="tab-catalog" class="tab-pane active">
+
+    <!-- সার্চ ও ফিল্টার -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক..." style="flex:1; min-width:180px;" oninput="applyFilter()" />
+      <select id="categoryFilter" style="max-width:180px;" onchange="applyFilter()">
+        <option value="">সব ক্যাটাগরি</option>
+      </select>
+      <select id="availFilter" style="max-width:150px;" onchange="applyFilter()">
+        <option value="">সব বই</option>
+        <option value="available">উপলব্ধ</option>
+        <option value="unavailable">বুকিং আছে</option>
+      </select>
     </div>
-    <button class="btn brass" style="margin-top:16px;" onclick="addBook()">বই যোগ করুন</button>
-    <div id="bMsg"></div>
+    <div id="filterSummary" style="font-size:0.82rem; color:var(--muted); margin-bottom:16px;"></div>
+
+    <!-- অ্যাডমিন: বই যোগ -->
+    <div id="adminBlock" class="admin-only-block" style="display:none; margin-bottom:26px;">
+      <span class="admin-badge">নতুন বই যোগ করুন</span>
+      <div class="grid-2">
+        <div><label>কোড <span style="color:var(--rust);">*</span></label><input id="bCode" /></div>
+        <div><label>বইয়ের নাম <span style="color:var(--rust);">*</span></label><input id="bTitle" /></div>
+        <div><label>লেখকের নাম <span style="color:var(--rust);">*</span></label><input id="bAuthor" /></div>
+        <div><label>ক্যাটাগরি</label>
+          <input id="bCategory" list="catSuggest" placeholder="যেমন: উপন্যাস, ইতিহাস..." />
+          <datalist id="catSuggest"></datalist>
+        </div>
+        <div><label>মোট কপি</label><input id="bCopies" type="number" min="1" value="1" /></div>
+      </div>
+
+      <!-- ছবি ক্রপ -->
+      <label style="margin-top:14px;">বইয়ের প্রচ্ছদ ছবি</label>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+        <label class="btn outline" style="cursor:pointer; margin:0;">
+          📷 ক্যামেরা / গ্যালারি
+          <input type="file" accept="image/*" capture="environment" id="bCoverInput" style="display:none;" onchange="loadCoverImage(event,'add')" />
+        </label>
+        <span id="bCoverName" style="font-size:0.82rem; color:var(--muted);"></span>
+      </div>
+      <div id="addCropWrap" class="crop-wrap">
+        <img id="addCropImg" />
+        <div id="addCropBox" class="crop-box"><div class="crop-handle" id="addCropHandle"></div></div>
+      </div>
+      <canvas id="addCropCanvas" style="display:none;"></canvas>
+      <img id="addCoverPreview" style="display:none; width:80px; height:107px; object-fit:cover; border:1px solid var(--line); border-radius:var(--radius); margin-top:8px;" />
+      <button id="addCropBtn" class="btn outline" style="display:none; margin-top:8px;" onclick="cropAndPreview('add')">✂️ এই অংশটুকু ব্যবহার করুন</button>
+
+      <button class="btn brass" style="margin-top:16px;" onclick="addBook()">বই যোগ করুন</button>
+      <div id="bMsg"></div>
+    </div>
+
+    <div class="card-grid" id="bookGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">কোনো বই পাওয়া যায়নি।</div>
   </div>
 
-  <div class="card-grid" id="bookGrid"></div>
-  <div class="empty-state" id="emptyState" style="display:none;">কোনো বই পাওয়া যায়নি।</div>
+  <!-- পরিসংখ্যান ট্যাব -->
+  <div id="tab-stats" class="tab-pane">
+    <div id="statsLoading" style="color:var(--muted); font-size:0.9rem; padding:20px 0;">লোড হচ্ছে...</div>
+
+    <div id="statsContent" style="display:none;">
+      <div class="grid-2" style="gap:24px;">
+
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:14px;">সর্বাধিক পঠিত বই</div>
+          <div id="topBooksList"></div>
+        </div>
+
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:14px;">সবচেয়ে বেশি বই পড়েছেন</div>
+          <div id="topMembersList"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
 </main>
 
+<!-- এডিট মডাল -->
 <div id="editModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
@@ -60,102 +135,226 @@
 <script src="js/api.js"></script>
 <script>
 renderNav('books.html');
-let allBooks = [];
+renderRefreshBtn(() => { loadBooks(); if (statsLoaded) loadStats(); });
 
+let allBooks = [];
+let statsLoaded = false;
+let addCoverDataUrl = '';
+
+// ---------- ট্যাব ----------
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', ['catalog','stats'][i] === name));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'stats' && !statsLoaded) loadStats();
+}
+
+// ---------- অ্যাডমিন ----------
 function onAdminStateChange() {
   document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
   renderBooks(allBooks);
 }
 
+// ---------- ক্রপ লজিক ----------
+function loadCoverImage(evt, prefix) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  document.getElementById(prefix === 'add' ? 'bCoverName' : 'eCoverName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => initCrop(e.target.result, prefix);
+  reader.readAsDataURL(file);
+}
+
+function initCrop(src, prefix) {
+  const wrap = document.getElementById(prefix + 'CropWrap');
+  const img  = document.getElementById(prefix + 'CropImg');
+  img.src = src;
+  wrap.style.display = 'block';
+  document.getElementById(prefix + 'CropBtn').style.display = 'inline-block';
+  document.getElementById(prefix === 'add' ? 'addCoverPreview' : 'editCoverPreview').style.display = 'none';
+  if (prefix === 'add') addCoverDataUrl = '';
+  else editCoverDataUrl = '';
+
+  img.onload = () => {
+    const box = document.getElementById(prefix + 'CropBox');
+    const w = wrap.offsetWidth;
+    const ratio = img.naturalHeight / img.naturalWidth;
+    const iH = w * ratio;
+    wrap.style.height = iH + 'px';
+
+    // ডিফল্ট ক্রপ বক্স — মাঝখানে ৩:৪ অনুপাত
+    const bw = Math.min(w * 0.7, w);
+    const bh = bw * (4/3);
+    let bx = (w - bw) / 2;
+    let by = (iH - bh) / 2;
+    setBox(box, bx, by, bw, bh, iH, w);
+    makeDraggable(box, document.getElementById(prefix + 'CropHandle'), prefix, iH, w);
+  };
+}
+
+function setBox(box, x, y, w, h, maxH, maxW) {
+  box.style.left = x + 'px';
+  box.style.top  = y + 'px';
+  box.style.width  = w + 'px';
+  box.style.height = h + 'px';
+}
+
+function makeDraggable(box, handle, prefix, imgH, imgW) {
+  let startX, startY, startL, startT, startW, startH, mode;
+
+  function onDown(e, m) {
+    mode = m;
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    startL = parseInt(box.style.left); startT = parseInt(box.style.top);
+    startW = parseInt(box.style.width); startH = parseInt(box.style.height);
+    e.preventDefault();
+  }
+  function onMove(e) {
+    const p = e.touches ? e.touches[0] : e;
+    const dx = p.clientX - startX, dy = p.clientY - startY;
+    if (mode === 'move') {
+      const nx = Math.max(0, Math.min(imgW - startW, startL + dx));
+      const ny = Math.max(0, Math.min(imgH - startH, startT + dy));
+      box.style.left = nx + 'px'; box.style.top = ny + 'px';
+    } else {
+      const nw = Math.max(60, startW + dx);
+      const nh = nw * (4/3);
+      if (startL + nw <= imgW && startT + nh <= imgH) {
+        box.style.width = nw + 'px'; box.style.height = nh + 'px';
+      }
+    }
+    e.preventDefault();
+  }
+  function onUp() { mode = null; }
+
+  box.addEventListener('mousedown',  e => onDown(e, 'move'));
+  box.addEventListener('touchstart', e => onDown(e, 'move'), { passive:false });
+  handle.addEventListener('mousedown',  e => { e.stopPropagation(); onDown(e, 'resize'); });
+  handle.addEventListener('touchstart', e => { e.stopPropagation(); onDown(e, 'resize'); }, { passive:false });
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchmove', onMove, { passive:false });
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchend', onUp);
+}
+
+function cropAndPreview(prefix) {
+  const wrap = document.getElementById(prefix + 'CropWrap');
+  const img  = document.getElementById(prefix + 'CropImg');
+  const box  = document.getElementById(prefix + 'CropBox');
+  const canvas = document.getElementById(prefix + 'CropCanvas');
+
+  const scaleX = img.naturalWidth  / wrap.offsetWidth;
+  const scaleY = img.naturalHeight / wrap.offsetHeight;
+  const sx = parseInt(box.style.left)  * scaleX;
+  const sy = parseInt(box.style.top)   * scaleY;
+  const sw = parseInt(box.style.width) * scaleX;
+  const sh = parseInt(box.style.height)* scaleY;
+
+  // আউটপুট: সর্বোচ্চ 400×533 (3:4)
+  const outW = 400, outH = 533;
+  canvas.width = outW; canvas.height = outH;
+  canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+
+  if (prefix === 'add') addCoverDataUrl = dataUrl;
+  else editCoverDataUrl = dataUrl;
+
+  const preview = document.getElementById(prefix === 'add' ? 'addCoverPreview' : 'editCoverPreview');
+  preview.src = dataUrl;
+  preview.style.display = 'block';
+  wrap.style.display = 'none';
+  document.getElementById(prefix + 'CropBtn').style.display = 'none';
+}
+
+// ---------- বই কার্ড ----------
 function bookCard(b) {
-  const total = Number(b.TotalCopies) || 1;
+  const total     = Number(b.TotalCopies) || 1;
   const available = Number(b.AvailableCopies);
-  const isAvail = available > 0;
-
+  const isAvail   = available > 0;
+  const coverHtml = b.CoverURL
+    ? `<img class="book-cover" src="${b.CoverURL}" loading="lazy" />`
+    : `<div class="book-cover-placeholder">📖</div>`;
   const copyBadge = total > 1
-    ? `<span style="font-size:0.75rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;">${available}/${total} কপি</span>`
+    ? `<span style="font-size:0.74rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;">${available}/${total} কপি</span>`
     : '';
-
-  const adminButtons = isAdmin() ? `
+  const adminBtns = isAdmin() ? `
     <div class="row-actions" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
       <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
       <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
     </div>` : '';
-
   return `
     <div class="index-card">
+      ${coverHtml}
       <div class="catid mono">কোড: ${b.Code}${b.Category ? ' · ' + b.Category : ''}</div>
       <h3>${b.Title}</h3>
       <div class="author">লেখক: ${b.Author}</div>
-      <div class="meta-row" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+      <div class="meta-row" style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
         <span class="tag ${isAvail ? 'available' : 'unavailable'}">${isAvail ? 'উপলব্ধ' : 'অনুপলব্ধ'}</span>
         ${copyBadge}
       </div>
-      ${adminButtons}
+      ${adminBtns}
     </div>`;
 }
 
 function renderBooks(list) {
-  const grid = document.getElementById('bookGrid');
+  const grid  = document.getElementById('bookGrid');
   const empty = document.getElementById('emptyState');
-  document.getElementById('filterSummary').textContent = list.length > 0
-    ? `মোট ${list.length}টি বই পাওয়া গেছে`
-    : '';
-  if (!list || list.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
+  document.getElementById('filterSummary').textContent = list.length > 0 ? `মোট ${list.length}টি বই` : '';
+  if (!list || list.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = list.map(bookCard).join('');
 }
 
 function applyFilter() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const cat = document.getElementById('categoryFilter').value;
-  const avail = document.getElementById('availFilter').value;
+  const q      = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat    = document.getElementById('categoryFilter').value;
+  const avail  = document.getElementById('availFilter').value;
   let list = allBooks;
-  if (q) list = list.filter(b =>
-    String(b.Code).toLowerCase().includes(q) ||
-    String(b.Title).toLowerCase().includes(q) ||
-    String(b.Author).toLowerCase().includes(q)
-  );
-  if (cat) list = list.filter(b => String(b.Category) === cat);
-  if (avail === 'available') list = list.filter(b => Number(b.AvailableCopies) > 0);
+  if (q)    list = list.filter(b => String(b.Code).toLowerCase().includes(q) || String(b.Title).toLowerCase().includes(q) || String(b.Author).toLowerCase().includes(q));
+  if (cat)  list = list.filter(b => String(b.Category) === cat);
+  if (avail === 'available')   list = list.filter(b => Number(b.AvailableCopies) > 0);
   if (avail === 'unavailable') list = list.filter(b => Number(b.AvailableCopies) === 0);
   renderBooks(list);
 }
 
 async function loadBooks() {
   allBooks = await Api.get('listBooks');
-  // ক্যাটাগরি ড্রপডাউন পপুলেট
   const cats = [...new Set(allBooks.map(b => b.Category).filter(Boolean))].sort();
   const sel = document.getElementById('categoryFilter');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + cats.map(c => `<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
+  sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
   document.getElementById('catSuggest').innerHTML = cats.map(c => `<option value="${c}"></option>`).join('');
   applyFilter();
 }
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') applyFilter(); });
 
+// ---------- বই যোগ ----------
 async function addBook() {
   const payload = {
-    code: document.getElementById('bCode').value.trim(),
-    title: document.getElementById('bTitle').value.trim(),
-    author: document.getElementById('bAuthor').value.trim(),
-    category: document.getElementById('bCategory').value.trim(),
+    code:        document.getElementById('bCode').value.trim(),
+    title:       document.getElementById('bTitle').value.trim(),
+    author:      document.getElementById('bAuthor').value.trim(),
+    category:    document.getElementById('bCategory').value.trim(),
     totalCopies: document.getElementById('bCopies').value || 1,
+    cover:       addCoverDataUrl,
   };
   const msg = document.getElementById('bMsg');
   if (!payload.code || !payload.title || !payload.author) {
     msg.innerHTML = `<div class="msg error">কোড, নাম ও লেখক আবশ্যক</div>`; return;
   }
+  msg.innerHTML = `<div class="msg success">সংরক্ষণ হচ্ছে...</div>`;
   const res = await Api.post('addBook', payload);
   if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">বই যোগ হয়েছে</div>`;
+  msg.innerHTML = `<div class="msg success">বই যোগ হয়েছে ✓</div>`;
   ['bCode','bTitle','bAuthor','bCategory'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bCopies').value = 1;
+  document.getElementById('bCoverInput').value = '';
+  document.getElementById('bCoverName').textContent = '';
+  document.getElementById('addCoverPreview').style.display = 'none';
+  document.getElementById('addCropWrap').style.display = 'none';
+  addCoverDataUrl = '';
   loadBooks();
 }
 
@@ -165,21 +364,38 @@ async function removeBook(code) {
   loadBooks();
 }
 
+// ---------- এডিট মডাল ----------
+let editCoverDataUrl = '';
+
 function openEdit(code) {
-  const book = allBooks.find(b => String(b.Code) === String(code));
-  if (!book) return;
+  const b = allBooks.find(x => String(x.Code) === String(code));
+  if (!b) return;
+  editCoverDataUrl = '';
   document.getElementById('editModalRoot').innerHTML = `
     <div class="modal-backdrop" onclick="closeEdit(event)">
-      <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal" style="max-width:460px;" onclick="event.stopPropagation()">
         <h3>বই এডিট করুন</h3>
-        <label>কোড</label><input value="${book.Code}" disabled />
-        <label>বইয়ের নাম</label><input id="eTitle" value="${book.Title}" />
-        <label>লেখকের নাম</label><input id="eAuthor" value="${book.Author}" />
-        <label>ক্যাটাগরি</label><input id="eCategory" value="${book.Category || ''}" />
-        <label>মোট কপি</label><input id="eCopies" type="number" min="1" value="${book.TotalCopies || 1}" />
-        <div style="font-size:0.8rem; color:var(--muted); margin-top:6px;">বর্তমানে উপলব্ধ: ${book.AvailableCopies || 0} কপি</div>
-        <button class="btn brass" style="margin-top:18px;" onclick="saveEdit('${book.Code}')">সংরক্ষণ করুন</button>
-        <button class="btn outline" style="margin-top:18px;" onclick="closeEdit()">বাতিল</button>
+        <label>কোড</label><input value="${b.Code}" disabled />
+        <label>বইয়ের নাম</label><input id="eTitle" value="${b.Title}" />
+        <label>লেখকের নাম</label><input id="eAuthor" value="${b.Author}" />
+        <label>ক্যাটাগরি</label><input id="eCategory" value="${b.Category || ''}" />
+        <label>মোট কপি</label><input id="eCopies" type="number" min="1" value="${b.TotalCopies || 1}" />
+        <div style="font-size:0.8rem; color:var(--muted); margin:4px 0 12px;">বর্তমানে উপলব্ধ: ${b.AvailableCopies || 0} কপি</div>
+
+        <label>প্রচ্ছদ ছবি ${b.CoverURL ? '(বদলাতে চাইলে নতুন ছবি দিন)' : ''}</label>
+        ${b.CoverURL ? `<img src="${b.CoverURL}" style="width:60px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:2px; margin-bottom:8px; display:block;" />` : ''}
+        <label class="btn outline" style="cursor:pointer; display:inline-block; margin-bottom:8px;">
+          📷 ছবি বদলান
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="loadCoverImage(event,'edit')" />
+        </label>
+        <span id="eCoverName" style="font-size:0.82rem; color:var(--muted); margin-left:8px;"></span>
+        <div id="editCropWrap" class="crop-wrap"><img id="editCropImg" /><div id="editCropBox" class="crop-box"><div class="crop-handle" id="editCropHandle"></div></div></div>
+        <canvas id="editCropCanvas" style="display:none;"></canvas>
+        <img id="editCoverPreview" style="display:none; width:60px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:2px; margin-top:6px;" />
+        <button id="editCropBtn" class="btn outline" style="display:none; margin:8px 0;" onclick="cropAndPreview('edit')">✂️ এই অংশটুকু ব্যবহার করুন</button>
+
+        <button class="btn brass" style="margin-top:16px;" onclick="saveEdit('${b.Code}')">সংরক্ষণ করুন</button>
+        <button class="btn outline" style="margin-top:16px;" onclick="closeEdit()">বাতিল</button>
       </div>
     </div>`;
 }
@@ -188,10 +404,11 @@ function closeEdit() { document.getElementById('editModalRoot').innerHTML = ''; 
 async function saveEdit(code) {
   const payload = {
     code,
-    title: document.getElementById('eTitle').value.trim(),
-    author: document.getElementById('eAuthor').value.trim(),
-    category: document.getElementById('eCategory').value.trim(),
+    title:       document.getElementById('eTitle').value.trim(),
+    author:      document.getElementById('eAuthor').value.trim(),
+    category:    document.getElementById('eCategory').value.trim(),
     totalCopies: document.getElementById('eCopies').value,
+    cover:       editCoverDataUrl,
   };
   const res = await Api.post('updateBook', payload);
   if (res.error) { alert(res.error); return; }
@@ -199,8 +416,44 @@ async function saveEdit(code) {
   loadBooks();
 }
 
+// ---------- পরিসংখ্যান ----------
+async function loadStats() {
+  document.getElementById('statsLoading').style.display = 'block';
+  document.getElementById('statsContent').style.display = 'none';
+  const stats = await Api.get('getReadingStats');
+  statsLoaded = true;
+  document.getElementById('statsLoading').style.display = 'none';
+  document.getElementById('statsContent').style.display = 'block';
+
+  document.getElementById('topBooksList').innerHTML = stats.topBooks.length === 0
+    ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
+    : stats.topBooks.map((b, i) => `
+      <div class="rank-row">
+        <div class="rank-num">${i + 1}</div>
+        ${b.coverUrl ? `<img class="rank-cover" src="${b.coverUrl}" />` : `<div class="rank-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>`}
+        <div class="rank-info">
+          <strong>${b.title}</strong>
+          <span>${b.author}</span>
+        </div>
+        <span class="rank-badge">${b.count} বার</span>
+      </div>`).join('');
+
+  document.getElementById('topMembersList').innerHTML = stats.topMembers.length === 0
+    ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
+    : stats.topMembers.map((m, i) => `
+      <div class="rank-row">
+        <div class="rank-num">${i + 1}</div>
+        ${m.photoUrl ? `<img class="rank-cover" src="${m.photoUrl}" style="border-radius:50%;" />` : `<div class="rank-cover" style="border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>`}
+        <div class="rank-info">
+          <strong>${m.name}</strong>
+          <span class="mono">${m.id}</span>
+        </div>
+        <span class="rank-badge">${m.count}টি বই</span>
+      </div>`).join('');
+}
+
 onAdminStateChange();
 loadBooks();
 </script>
 </body>
-</html>
+</html>v
