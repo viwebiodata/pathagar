@@ -342,12 +342,12 @@ async function addBook() {
   };
   const msg = document.getElementById('bMsg');
   if (!payload.code || !payload.title || !payload.author) {
-    msg.innerHTML = `<div class="msg error">কোড, নাম ও লেখক আবশ্যক</div>`; return;
+    Toast.error('কোড, নাম ও লেখক আবশ্যক'); return;
   }
-  msg.innerHTML = `<div class="msg success">সংরক্ষণ হচ্ছে...</div>`;
+  const _t = Toast.loading('বই সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addBook', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">বই যোগ হয়েছে ✓</div>`;
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok('বই সফলভাবে যোগ হয়েছে ✓', _t);
   ['bCode','bTitle','bAuthor','bCategory'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bCopies').value = 1;
   document.getElementById('bCoverInput').value = '';
@@ -456,4 +456,4 @@ onAdminStateChange();
 loadBooks();
 </script>
 </body>
-</html>v
+</html>
