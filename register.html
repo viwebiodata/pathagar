@@ -180,18 +180,19 @@ async function registerMember() {
   };
 
   const msg = document.getElementById('regMsg');
-  if (!payload.name) { msg.innerHTML = `<div class="msg error">নাম আবশ্যক</div>`; return; }
-  if (!payload.phone) { msg.innerHTML = `<div class="msg error">ফোন নম্বর আবশ্যক</div>`; return; }
+  if (!payload.name) { Toast.error('নাম আবশ্যক'); return; }
+  if (!payload.phone) { Toast.error('ফোন নম্বর আবশ্যক'); return; }
   if (payMethod === 'online' && !payload.transactionId) {
-    msg.innerHTML = `<div class="msg error">অনলাইন পেমেন্টে ট্রানজেকশন নম্বর আবশ্যক</div>`; return;
+    Toast.error('অনলাইন পেমেন্টে ট্রানজেকশন নম্বর আবশ্যক'); return;
   }
 
-  msg.innerHTML = `<div class="msg success">সংরক্ষণ করা হচ্ছে...</div>`;
+  const _t = Toast.loading('তথ্য জমা হচ্ছে, অপেক্ষা করুন...');
   const res = await Api.post('registerMember', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  if (res.error) { Toast.err(res.error, _t); return; }
 
-  msg.innerHTML = `
-    <div class="msg success" style="font-size:1rem; padding:16px;">
+  Toast.ok('নিবন্ধন সম্পন্ন হয়েছে! সদস্য আইডি: ' + res.id, _t);
+  document.getElementById('regMsg').innerHTML = `
+    <div class="msg success" style="margin-top:14px; padding:16px;">
       ✅ নিবন্ধন সম্পন্ন হয়েছে!<br>
       আপনার সদস্য আইডি: <strong class="mono" style="font-size:1.2rem;">${res.id}</strong><br>
       <span style="font-size:0.85rem; opacity:0.8;">বই বুকিং এর সময় এই আইডি ব্যবহার করুন — নোট করে রাখুন।</span>
