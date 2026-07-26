@@ -217,12 +217,14 @@ async function submitExpense() {
     note:     document.getElementById('eNote').value.trim(),
   };
   const msg = document.getElementById('eMsg');
-  if (!payload.title)  { msg.innerHTML = `<div class="msg error">বিবরণ আবশ্যক</div>`; return; }
-  if (!payload.amount || Number(payload.amount) <= 0) { msg.innerHTML = `<div class="msg error">সঠিক পরিমাণ দিন</div>`; return; }
+  if (!payload.title)  { Toast.error('বিবরণ আবশ্যক'); return; }
+  if (!payload.amount || Number(payload.amount) <= 0) { Toast.error('সঠিক পরিমাণ দিন'); return; }
 
+  const _t = Toast.loading('ব্যয় সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addExpense', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">ব্যয় এন্ট্রি সংরক্ষিত হয়েছে</div>`;
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok('ব্যয় এন্ট্রি সংরক্ষিত হয়েছে ✓', _t);
+  msg.innerHTML = '';
   ['eTitle','eAmount','eNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('eCategory').value = '';
   loadAll();
