@@ -17,9 +17,10 @@ const Api = {
   },
 };
 
-// ---------- Toast popup system ----------
+// ═══════════════════════════════════════
+//  TOAST — স্ক্রিনের নিচে পপআপ বার্তা
+// ═══════════════════════════════════════
 (function () {
-  // toast wrapper তৈরি (একবারই)
   function getWrap() {
     let w = document.getElementById('_toastWrap');
     if (!w) {
@@ -30,7 +31,6 @@ const Api = {
     }
     return w;
   }
-
   let _loadingToast = null;
 
   window.Toast = {
@@ -41,37 +41,36 @@ const Api = {
       el.innerHTML = `<span class="toast-icon"></span><span>${msg}</span>`;
       getWrap().appendChild(el);
       _loadingToast = el;
-      return el;
     },
-
-    success(msg = 'সফলভাবে সংরক্ষিত হয়েছে ✓') {
+    success(msg = 'সফলভাবে সংরক্ষিত হয়েছে!') {
       this.clearLoading();
       const el = document.createElement('div');
       el.className = 'toast ok';
-      el.textContent = msg;
+      el.innerHTML = `<span class="t-icon">✓</span><span>${msg}</span>`;
       getWrap().appendChild(el);
-      setTimeout(() => {
-        el.classList.add('out');
-        setTimeout(() => el.remove(), 450);
-      }, 2800);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 3000);
     },
-
     error(msg = 'একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।') {
       this.clearLoading();
       const el = document.createElement('div');
       el.className = 'toast err';
-      el.textContent = msg;
+      el.innerHTML = `<span class="t-icon">✕</span><span>${msg}</span>`;
       getWrap().appendChild(el);
-      setTimeout(() => {
-        el.classList.add('out');
-        setTimeout(() => el.remove(), 450);
-      }, 3500);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 4000);
     },
-
+    info(msg) {
+      this.clearLoading();
+      const el = document.createElement('div');
+      el.className = 'toast info';
+      el.innerHTML = `<span class="t-icon">ℹ</span><span>${msg}</span>`;
+      getWrap().appendChild(el);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 450); }, 3500);
+    },
     clearLoading() {
       if (_loadingToast) {
         _loadingToast.classList.add('out');
-        setTimeout(() => _loadingToast && _loadingToast.remove(), 450);
+        const t = _loadingToast;
+        setTimeout(() => t.remove(), 450);
         _loadingToast = null;
       }
     },
@@ -79,64 +78,50 @@ const Api = {
 })();
 
 // ═══════════════════════════════════════
-// TOAST — পপ আপ বার্তা
-// ব্যবহার:
-//   const id = Toast.loading('তথ্য জমা হচ্ছে...');
-//   Toast.ok('সফলভাবে সংরক্ষিত হয়েছে ✓', id);
-//   Toast.err('কোনো সমস্যা হয়েছে', id);
+//  CONFIRM — কাস্টম confirm() পপআপ
+//  ব্যবহার: const ok = await Confirm.show('বইটি মুছবেন?')
 // ═══════════════════════════════════════
-const Toast = (() => {
-  let wrap;
+window.Confirm = {
+  show(msg, { title = 'নিশ্চিত করুন', okLabel = 'হ্যাঁ, করুন', cancelLabel = 'বাতিল', danger = true } = {}) {
+    return new Promise(resolve => {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="confirm-modal">
+          <div class="confirm-icon ${danger ? 'danger' : 'info'}">${danger ? '⚠️' : 'ℹ️'}</div>
+          <h3 class="confirm-title">${title}</h3>
+          <p class="confirm-msg">${msg}</p>
+          <div class="confirm-actions">
+            <button class="btn outline confirm-cancel">${cancelLabel}</button>
+            <button class="btn ${danger ? 'btn-danger' : 'brass'} confirm-ok">${okLabel}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
 
-  function getWrap() {
-    if (!wrap || !document.body.contains(wrap)) {
-      wrap = document.createElement('div');
-      wrap.className = 'toast-wrap';
-      document.body.appendChild(wrap);
-    }
-    return wrap;
-  }
+      backdrop.querySelector('.confirm-ok').onclick = () => {
+        backdrop.classList.add('fade-out');
+        setTimeout(() => backdrop.remove(), 300);
+        resolve(true);
+      };
+      backdrop.querySelector('.confirm-cancel').onclick = () => {
+        backdrop.classList.add('fade-out');
+        setTimeout(() => backdrop.remove(), 300);
+        resolve(false);
+      };
+      backdrop.onclick = (e) => {
+        if (e.target === backdrop) {
+          backdrop.classList.add('fade-out');
+          setTimeout(() => backdrop.remove(), 300);
+          resolve(false);
+        }
+      };
+    });
+  },
+};
 
-  function make(type, text) {
-    const el = document.createElement('div');
-    el.className = `toast ${type}`;
-    if (type === 'loading') {
-      el.innerHTML = `<span class="toast-icon"></span><span>${text}</span>`;
-    } else {
-      el.textContent = text;
-    }
-    getWrap().appendChild(el);
-    return el;
-  }
-
-  function dismiss(el, delay = 2800) {
-    if (!el || !el.parentNode) return;
-    setTimeout(() => {
-      el.classList.add('out');
-      el.addEventListener('animationend', () => el.remove(), { once: true });
-    }, delay);
-  }
-
-  return {
-    loading(text = 'তথ্য জমা হচ্ছে, অপেক্ষা করুন...') {
-      return make('loading', text);
-    },
-    ok(text = 'সফলভাবে সংরক্ষিত হয়েছে!', loadingEl) {
-      if (loadingEl) loadingEl.remove();
-      const el = make('ok', text);
-      dismiss(el, 2500);
-      return el;
-    },
-    err(text = 'কোনো সমস্যা হয়েছে।', loadingEl) {
-      if (loadingEl) loadingEl.remove();
-      const el = make('err', text);
-      dismiss(el, 3500);
-      return el;
-    },
-  };
-})();
-
-// ---------- Global Ripple on all .btn clicks ----------
+// ═══════════════════════════════════════
+//  Ripple effect — সব .btn এ
+// ═══════════════════════════════════════
 document.addEventListener('click', function (e) {
   const btn = e.target.closest('.btn');
   if (!btn || btn.disabled) return;
@@ -148,6 +133,10 @@ document.addEventListener('click', function (e) {
   btn.appendChild(r);
   setTimeout(() => r.remove(), 600);
 });
+
+// ═══════════════════════════════════════
+//  অ্যাডমিন সেশন
+// ═══════════════════════════════════════
 function isAdmin() { return sessionStorage.getItem('isAdmin') === 'yes'; }
 function setAdmin(on) {
   if (on) sessionStorage.setItem('isAdmin', 'yes');
@@ -166,7 +155,9 @@ function toInputDate(d) {
   return date.toISOString().slice(0, 10);
 }
 
-// ---------- রিফ্রেশ বাটন ----------
+// ═══════════════════════════════════════
+//  রিফ্রেশ বাটন
+// ═══════════════════════════════════════
 function renderRefreshBtn(onRefresh) {
   const wrap = document.getElementById('refreshBtnRoot');
   if (!wrap) return;
@@ -181,7 +172,9 @@ async function handleRefresh() {
   finally { btn.disabled = false; btn.textContent = '↻ রিফ্রেশ'; }
 }
 
-// ---------- নেভিগেশন (হ্যামবার্গার মেনু) ----------
+// ═══════════════════════════════════════
+//  নেভিগেশন
+// ═══════════════════════════════════════
 function renderNav(active) {
   const items = [
     ['index.html',    'হোম'],
@@ -195,7 +188,6 @@ function renderNav(active) {
     ['donations.html','অনুদান'],
     ['finance.html',  'আয়-ব্যয়'],
   ];
-
   const links = items.map(([href, label]) =>
     `<a class="nav-link ${active === href ? 'active' : ''}" href="${href}" onclick="closeMenu()">${label}</a>`
   ).join('');
@@ -203,29 +195,15 @@ function renderNav(active) {
   document.getElementById('navRoot').innerHTML = `
     <nav class="nav">
       <a href="index.html" class="brand"><span class="tab"></span>শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</a>
-
-      <!-- ডেস্কটপ লিংক -->
-      <div class="nav-desktop">
-        ${links}
-        <span id="adminSlot"></span>
-      </div>
-
-      <!-- মোবাইল হ্যামবার্গার বাটন -->
+      <div class="nav-desktop">${links}<span id="adminSlot"></span></div>
       <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="মেনু">
         <span></span><span></span><span></span>
       </button>
     </nav>
-
-    <!-- মোবাইল ড্রয়ার -->
     <div class="nav-drawer" id="navDrawer">
-      <div class="nav-drawer-inner">
-        ${links}
-        <span id="adminSlotMobile"></span>
-      </div>
+      <div class="nav-drawer-inner">${links}<span id="adminSlotMobile"></span></div>
     </div>
-    <!-- ওভারলে -->
-    <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
-  `;
+    <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>`;
 
   renderAdminSlot();
 }
@@ -245,44 +223,52 @@ function closeMenu() {
 
 function renderAdminSlot() {
   const html = isAdmin()
-    ? `<a class="nav-link admin-tag" href="#" onclick="doAdminLogout(); return false;">অ্যাডমিন ● লগআউট</a>`
-    : `<a class="nav-link" href="#" onclick="openAdminLogin(); return false;">অ্যাডমিন লগইন</a>`;
+    ? `<a class="nav-link admin-tag" href="#" onclick="doAdminLogout();return false;">অ্যাডমিন ● লগআউট</a>`
+    : `<a class="nav-link" href="#" onclick="openAdminLogin();return false;">অ্যাডমিন লগইন</a>`;
   const s1 = document.getElementById('adminSlot');
   const s2 = document.getElementById('adminSlotMobile');
   if (s1) s1.innerHTML = html;
-  if (s2) s2.innerHTML = html.replace('openAdminLogin()', 'openAdminLogin(); closeMenu();')
-                              .replace('doAdminLogout()', 'doAdminLogout(); closeMenu();');
+  if (s2) s2.innerHTML = html
+    .replace('openAdminLogin()', 'openAdminLogin();closeMenu();')
+    .replace('doAdminLogout()', 'doAdminLogout();closeMenu();');
 }
 
 function openAdminLogin() {
   document.getElementById('adminModalRoot').innerHTML = `
     <div class="modal-backdrop" onclick="closeAdminLogin(event)">
       <div class="modal" onclick="event.stopPropagation()">
-        <h3>অ্যাডমিন লগইন</h3>
+        <h3 style="margin-bottom:18px;">🔐 অ্যাডমিন লগইন</h3>
         <label>ইউজারনেম</label>
-        <input id="adminUser" type="text" />
+        <input id="adminUser" type="text" autofocus />
         <label>পাসওয়ার্ড</label>
         <input id="adminPass" type="password" onkeydown="if(event.key==='Enter') submitAdminLogin()" />
-        <button class="btn brass" style="margin-top:18px;" onclick="submitAdminLogin()">লগইন</button>
-        <button class="btn outline" style="margin-top:18px;" onclick="closeAdminLogin()">বাতিল</button>
-        <div id="adminLoginMsg"></div>
+        <div style="display:flex; gap:10px; margin-top:22px;">
+          <button class="btn outline" style="flex:1;" onclick="closeAdminLogin()">বাতিল</button>
+          <button class="btn brass" style="flex:1;" onclick="submitAdminLogin()">লগইন করুন</button>
+        </div>
       </div>
     </div>`;
 }
-function closeAdminLogin() { document.getElementById('adminModalRoot').innerHTML = ''; }
+function closeAdminLogin(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('adminModalRoot').innerHTML = '';
+}
 async function submitAdminLogin() {
   const username = document.getElementById('adminUser').value.trim();
   const password = document.getElementById('adminPass').value;
+  if (!username || !password) { Toast.error('ইউজারনেম ও পাসওয়ার্ড দিন'); return; }
+  Toast.loading('যাচাই করা হচ্ছে...');
   const res = await Api.post('adminLogin', { username, password });
-  const msg = document.getElementById('adminLoginMsg');
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('স্বাগতম! অ্যাডমিন হিসেবে লগইন হয়েছেন।');
   setAdmin(true);
-  closeAdminLogin();
+  document.getElementById('adminModalRoot').innerHTML = '';
   renderAdminSlot();
   if (typeof onAdminStateChange === 'function') onAdminStateChange();
 }
 function doAdminLogout() {
   setAdmin(false);
   renderAdminSlot();
+  Toast.info('লগআউট সম্পন্ন হয়েছে।');
   if (typeof onAdminStateChange === 'function') onAdminStateChange();
 }
