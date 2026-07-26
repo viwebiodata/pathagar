@@ -123,12 +123,12 @@ async function submitBooking() {
   };
   const msg = document.getElementById('bookingMsg');
   if (!payload.bookCode || !payload.memberId) {
-    msg.innerHTML = `<div class="msg error">বই কোড ও সদস্য আইডি দিন</div>`;
-    return;
+    Toast.error('বই কোড ও সদস্য আইডি দিন'); return;
   }
+  const _t = Toast.loading('বুকিং সংরক্ষণ হচ্ছে...');
   const res = await Api.post('createBooking', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">বুকিং সংরক্ষণ হয়েছে: "${res.bookTitle}" → ${res.memberName}</div>`;
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok(`বুকিং সম্পন্ন: "${res.bookTitle}" → ${res.memberName}`, _t);
   document.getElementById('fBookCode').value = '';
   document.getElementById('fMemberId').value = '';
   document.getElementById('fDueDate').value = '';
