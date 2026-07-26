@@ -132,12 +132,14 @@ async function submitDonation() {
     note:           document.getElementById('dNote').value.trim(),
   };
   const msg = document.getElementById('dMsg');
-  if (!payload.donorName) { msg.innerHTML = `<div class="msg error">দাতার নাম আবশ্যক</div>`; return; }
-  if (!payload.amount || Number(payload.amount) <= 0) { msg.innerHTML = `<div class="msg error">সঠিক পরিমাণ দিন</div>`; return; }
-  if (payMethod === 'online' && !payload.transactionId) { msg.innerHTML = `<div class="msg error">ট্রানজেকশন নম্বর আবশ্যক</div>`; return; }
+  if (!payload.donorName) { Toast.error('দাতার নাম আবশ্যক'); return; }
+  if (!payload.amount || Number(payload.amount) <= 0) { Toast.error('সঠিক পরিমাণ দিন'); return; }
+  if (payMethod === 'online' && !payload.transactionId) { Toast.error('ট্রানজেকশন নম্বর আবশ্যক'); return; }
 
+  const _t = Toast.loading('অনুদান জমা হচ্ছে...');
   const res = await Api.post('addDonation', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok('অনুদান সফলভাবে জমা হয়েছে! ধন্যবাদ', _t);
   msg.innerHTML = `
     <div class="msg success" style="padding:14px;">
       ✅ অনুদান সফলভাবে সংরক্ষিত হয়েছে (রেফারেন্স: <strong class="mono">${res.id}</strong>)<br>
