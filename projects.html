@@ -103,10 +103,12 @@ async function addProject() {
     description: document.getElementById('pDescription').value.trim(),
   };
   const msg = document.getElementById('pMsg');
-  if (!payload.title) { msg.innerHTML = `<div class="msg error">শিরোনাম দিন</div>`; return; }
+  if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
+  const _t = Toast.loading('প্রকল্প সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addProject', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">প্রকল্প যোগ হয়েছে</div>`;
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok('প্রকল্প সফলভাবে যোগ হয়েছে ✓', _t);
+  msg.innerHTML = '';
   document.getElementById('pTitle').value = '';
   document.getElementById('pDescription').value = '';
   loadProjects();
