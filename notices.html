@@ -105,10 +105,12 @@ async function addNotice() {
     content: document.getElementById('nContent').value.trim(),
   };
   const msg = document.getElementById('nMsg');
-  if (!payload.title) { msg.innerHTML = `<div class="msg error">শিরোনাম দিন</div>`; return; }
+  if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
+  const _t = Toast.loading('নোটিশ প্রকাশ হচ্ছে...');
   const res = await Api.post('addNotice', payload);
-  if (res.error) { msg.innerHTML = `<div class="msg error">${res.error}</div>`; return; }
-  msg.innerHTML = `<div class="msg success">নোটিশ প্রকাশিত হয়েছে</div>`;
+  if (res.error) { Toast.err(res.error, _t); return; }
+  Toast.ok('নোটিশ সফলভাবে প্রকাশিত হয়েছে ✓', _t);
+  msg.innerHTML = '';
   document.getElementById('nTitle').value = '';
   document.getElementById('nContent').value = '';
   loadNotices();
