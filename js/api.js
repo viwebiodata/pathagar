@@ -17,7 +17,137 @@ const Api = {
   },
 };
 
-// ---------- অ্যাডমিন সেশন ----------
+// ---------- Toast popup system ----------
+(function () {
+  // toast wrapper তৈরি (একবারই)
+  function getWrap() {
+    let w = document.getElementById('_toastWrap');
+    if (!w) {
+      w = document.createElement('div');
+      w.id = '_toastWrap';
+      w.className = 'toast-wrap';
+      document.body.appendChild(w);
+    }
+    return w;
+  }
+
+  let _loadingToast = null;
+
+  window.Toast = {
+    loading(msg = 'তথ্য জমা হচ্ছে... অপেক্ষা করুন।') {
+      this.clearLoading();
+      const el = document.createElement('div');
+      el.className = 'toast loading';
+      el.innerHTML = `<span class="toast-icon"></span><span>${msg}</span>`;
+      getWrap().appendChild(el);
+      _loadingToast = el;
+      return el;
+    },
+
+    success(msg = 'সফলভাবে সংরক্ষিত হয়েছে ✓') {
+      this.clearLoading();
+      const el = document.createElement('div');
+      el.className = 'toast ok';
+      el.textContent = msg;
+      getWrap().appendChild(el);
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 450);
+      }, 2800);
+    },
+
+    error(msg = 'একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।') {
+      this.clearLoading();
+      const el = document.createElement('div');
+      el.className = 'toast err';
+      el.textContent = msg;
+      getWrap().appendChild(el);
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => el.remove(), 450);
+      }, 3500);
+    },
+
+    clearLoading() {
+      if (_loadingToast) {
+        _loadingToast.classList.add('out');
+        setTimeout(() => _loadingToast && _loadingToast.remove(), 450);
+        _loadingToast = null;
+      }
+    },
+  };
+})();
+
+// ═══════════════════════════════════════
+// TOAST — পপ আপ বার্তা
+// ব্যবহার:
+//   const id = Toast.loading('তথ্য জমা হচ্ছে...');
+//   Toast.ok('সফলভাবে সংরক্ষিত হয়েছে ✓', id);
+//   Toast.err('কোনো সমস্যা হয়েছে', id);
+// ═══════════════════════════════════════
+const Toast = (() => {
+  let wrap;
+
+  function getWrap() {
+    if (!wrap || !document.body.contains(wrap)) {
+      wrap = document.createElement('div');
+      wrap.className = 'toast-wrap';
+      document.body.appendChild(wrap);
+    }
+    return wrap;
+  }
+
+  function make(type, text) {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    if (type === 'loading') {
+      el.innerHTML = `<span class="toast-icon"></span><span>${text}</span>`;
+    } else {
+      el.textContent = text;
+    }
+    getWrap().appendChild(el);
+    return el;
+  }
+
+  function dismiss(el, delay = 2800) {
+    if (!el || !el.parentNode) return;
+    setTimeout(() => {
+      el.classList.add('out');
+      el.addEventListener('animationend', () => el.remove(), { once: true });
+    }, delay);
+  }
+
+  return {
+    loading(text = 'তথ্য জমা হচ্ছে, অপেক্ষা করুন...') {
+      return make('loading', text);
+    },
+    ok(text = 'সফলভাবে সংরক্ষিত হয়েছে!', loadingEl) {
+      if (loadingEl) loadingEl.remove();
+      const el = make('ok', text);
+      dismiss(el, 2500);
+      return el;
+    },
+    err(text = 'কোনো সমস্যা হয়েছে।', loadingEl) {
+      if (loadingEl) loadingEl.remove();
+      const el = make('err', text);
+      dismiss(el, 3500);
+      return el;
+    },
+  };
+})();
+
+// ---------- Global Ripple on all .btn clicks ----------
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
 function isAdmin() { return sessionStorage.getItem('isAdmin') === 'yes'; }
 function setAdmin(on) {
   if (on) sessionStorage.setItem('isAdmin', 'yes');
