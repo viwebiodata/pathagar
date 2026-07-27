@@ -90,7 +90,10 @@ async function loadProjects() {
         <div class="project-body ${isFeatured ? 'open' : ''}" id="pb-${p.ID}">
           <div class="project-body-inner">
             ${p.Description || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
-            ${adminBtn}
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+              ${adminBtn}
+              <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t, '🏗️ '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${p.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -102,7 +105,6 @@ async function addProject() {
     title:       document.getElementById('pTitle').value.trim(),
     description: document.getElementById('pDescription').value.trim(),
   };
-  const msg = document.getElementById('pMsg');
   if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
   const _t = Toast.loading('প্রকল্প সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addProject', payload);
@@ -115,7 +117,7 @@ async function addProject() {
 }
 
 async function removeProject(id) {
-  if (!confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
+  if (!await Confirm.show('প্রকল্পটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteProject', { id });
   loadProjects();
 }
