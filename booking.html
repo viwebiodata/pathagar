@@ -46,15 +46,20 @@
     <button class="btn brass" onclick="openAdminLogin()">অ্যাডমিন লগইন</button>
   </div>
 
-  <div class="section-label">বুকিং তালিকা</div>
-  <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
-    <input id="filterCode" placeholder="বই কোড দিয়ে ফিল্টার" style="max-width:220px;" oninput="loadBookings()" />
-    <input id="filterMember" placeholder="সদস্য আইডি দিয়ে ফিল্টার" style="max-width:220px;" oninput="loadBookings()" />
-    <select id="filterStatus" style="max-width:180px;" onchange="loadBookings()">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+    <div class="section-label" style="margin:0;">বুকিং তালিকা</div>
+    <button class="btn small outline" onclick="printBookings()">🖨️ প্রিন্ট / PDF</button>
+  </div>
+  <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center;">
+    <input id="filterCode" placeholder="বই কোড" style="max-width:160px;" oninput="loadBookings()" />
+    <input id="filterMember" placeholder="সদস্য আইডি" style="max-width:160px;" oninput="loadBookings()" />
+    <select id="filterStatus" style="max-width:150px;" onchange="loadBookings()">
       <option value="">সব</option>
       <option value="active">চলমান</option>
       <option value="returned">ফেরত দেওয়া</option>
     </select>
+    <input id="filterFrom" type="date" title="শুরুর তারিখ" style="max-width:150px;" onchange="loadBookings()" />
+    <input id="filterTo" type="date" title="শেষ তারিখ" style="max-width:150px;" onchange="loadBookings()" />
   </div>
   <div class="table-scroll"><table>
     <thead>
@@ -121,7 +126,6 @@ async function submitBooking() {
     takenDate: document.getElementById('fTakenDate').value,
     dueDate: document.getElementById('fDueDate').value,
   };
-  const msg = document.getElementById('bookingMsg');
   if (!payload.bookCode || !payload.memberId) {
     Toast.error('বই কোড ও সদস্য আইডি দিন'); return;
   }
@@ -143,20 +147,51 @@ function onAdminStateChange() {
   loadBookings();
 }
 
+let _allBookings = [];
+
+function printBookings() {
+  const from = document.getElementById('filterFrom').value;
+  const to   = document.getElementById('filterTo').value;
+  const list = _allBookings;
+  const meta = from || to
+    ? `<span>তারিখ: ${from ? fmtDate(from) : '—'} থেকে ${to ? fmtDate(to) : '—'}</span>`
+    : '<span>সকল বুকিং</span>';
+  const html = `<table>
+    <thead><tr><th>আইডি</th><th>বই</th><th>সদস্য</th><th>নেয়ার তারিখ</th><th>ফেরতের তারিখ</th><th>অবস্থা</th><th>জরিমানা</th></tr></thead>
+    <tbody>${list.map(b => `<tr>
+      <td>${b.ID}</td>
+      <td>${b.BookTitle||b.BookCode}</td>
+      <td>${b.MemberName||b.MemberID}</td>
+      <td>${fmtDate(b.TakenDate)}</td>
+      <td>${fmtDate(b.DueDate)}</td>
+      <td><span class="badge ${b.Status==='returned'?'badge-ok':'badge-warn'}">${b.Status==='returned'?'ফেরত':'চলমান'}</span></td>
+      <td>${b.Fine>0?'৳'+b.Fine:'—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+  PrintUtil.print(`বুকিং তালিকা (${list.length}টি)`, html, meta);
+}
+
 async function loadBookings() {
   const bookCode = document.getElementById('filterCode').value.trim();
   const memberId = document.getElementById('filterMember').value.trim();
-  const status = document.getElementById('filterStatus').value;
-  const bookings = await Api.get('listBookings', { bookCode, memberId, status });
+  const status   = document.getElementById('filterStatus').value;
+  const fromDate = document.getElementById('filterFrom').value;
+  const toDate   = document.getElementById('filterTo').value;
+  let bookings = await Api.get('listBookings', { bookCode, memberId, status });
+  if (!bookings) bookings = [];
+
+  // তারিখ রেঞ্জ ফিল্টার (client-side)
+  if (fromDate) bookings = bookings.filter(b => b.TakenDate && new Date(b.TakenDate) >= new Date(fromDate));
+  if (toDate)   bookings = bookings.filter(b => b.TakenDate && new Date(b.TakenDate) <= new Date(toDate + 'T23:59:59'));
+  _allBookings = bookings;
   const body = document.getElementById('bookingBody');
   const empty = document.getElementById('bookingEmpty');
-  if (!bookings || bookings.length === 0) {
+  if (!_allBookings || _allBookings.length === 0) {
     body.innerHTML = '';
     empty.style.display = 'block';
     return;
   }
   empty.style.display = 'none';
-  body.innerHTML = bookings.map(b => {
+  body.innerHTML = _allBookings.map(b => {
     let statusHtml;
     if (b.Status === 'returned') {
       statusHtml = b.IsOverdue
@@ -192,14 +227,14 @@ async function loadBookings() {
 }
 
 async function markReturned(id) {
-  if (!confirm('বইটি ফেরত এসেছে বলে চিহ্নিত করবেন?')) return;
+  if (!await Confirm.show('বইটি ফেরত এসেছে বলে চিহ্নিত করবেন?')) return;
   const res = await Api.post('returnBooking', { id, returnDate: toInputDate(new Date()) });
-  if (res.error) { alert(res.error); return; }
+  if (res.error) { Toast.error(res.error); return; }
   loadBookings();
 }
 
 async function removeBooking(id) {
-  if (!confirm('এই বুকিং রেকর্ডটি মুছে ফেলতে চান?')) return;
+  if (!await Confirm.show('এই বুকিং রেকর্ডটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteBooking', { id });
   loadBookings();
 }
