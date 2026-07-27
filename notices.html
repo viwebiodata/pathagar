@@ -92,7 +92,10 @@ async function loadNotices() {
         <div class="notice-body ${isFeatured ? 'open' : ''}" id="nb-${n.ID}">
           <div class="notice-body-inner">
             ${n.Content}
-            ${adminBtn}
+            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+              ${adminBtn}
+              <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t, '📢 '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${n.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -104,7 +107,6 @@ async function addNotice() {
     title:   document.getElementById('nTitle').value.trim(),
     content: document.getElementById('nContent').value.trim(),
   };
-  const msg = document.getElementById('nMsg');
   if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
   const _t = Toast.loading('নোটিশ প্রকাশ হচ্ছে...');
   const res = await Api.post('addNotice', payload);
@@ -117,7 +119,7 @@ async function addNotice() {
 }
 
 async function removeNotice(id) {
-  if (!confirm('নোটিশটি মুছে ফেলতে চান?')) return;
+  if (!await Confirm.show('নোটিশটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteNotice', { id });
   loadNotices();
 }
