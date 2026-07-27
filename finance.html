@@ -113,10 +113,13 @@
     </div>
 
     <!-- ব্যয়ের তালিকা -->
-    <div class="section-label">ব্যয়ের তালিকা</div>
-    <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-      <input id="filterExpense" placeholder="বিবরণ দিয়ে খুঁজুন..." style="max-width:240px;" oninput="renderExpenses()" />
-      <select id="filterCat" style="max-width:200px;" onchange="renderExpenses()">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <div class="section-label" style="margin:0;">ব্যয়ের তালিকা</div>
+      <button class="btn small outline" onclick="printFinance()">🖨️ প্রিন্ট / PDF</button>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+      <input id="filterExpense" placeholder="বিবরণ দিয়ে খুঁজুন..." style="max-width:200px;" oninput="renderExpenses()" />
+      <select id="filterCat" style="max-width:180px;" onchange="renderExpenses()">
         <option value="">সব ক্যাটাগরি</option>
         <option value="বই ক্রয়">বই ক্রয়</option>
         <option value="আসবাবপত্র">আসবাবপত্র</option>
@@ -126,6 +129,8 @@
         <option value="স্টেশনারি">স্টেশনারি</option>
         <option value="অন্যান্য">অন্যান্য</option>
       </select>
+      <input id="expFrom" type="date" title="শুরুর তারিখ" style="max-width:150px;" onchange="renderExpenses()" />
+      <input id="expTo"   type="date" title="শেষ তারিখ"   style="max-width:150px;" onchange="renderExpenses()" />
     </div>
     <div class="table-scroll"><table>
       <thead>
@@ -186,12 +191,39 @@ async function loadExpenses() {
   renderExpenses();
 }
 
+function printFinance() {
+  const list = allExpenses;
+  const from = document.getElementById('expFrom').value;
+  const to   = document.getElementById('expTo').value;
+  const total = list.reduce((s,e) => s + Number(e.Amount||0), 0);
+  const meta  = from || to
+    ? `<span>তারিখ: ${from?fmtDate(from):'—'} থেকে ${to?fmtDate(to):'—'} · মোট: ৳${total}</span>`
+    : `<span>মোট ব্যয়: ৳${total}</span>`;
+  const html = `<table>
+    <thead><tr><th>তারিখ</th><th>বিবরণ</th><th>ক্যাটাগরি</th><th>পরিমাণ</th><th>মন্তব্য</th></tr></thead>
+    <tbody>${list.map(e => `<tr>
+      <td>${fmtDate(e.Date)}</td><td>${e.Title}</td>
+      <td><span class="badge badge-warn">${e.Category||'—'}</span></td>
+      <td><strong>৳${Number(e.Amount).toLocaleString()}</strong></td>
+      <td>${e.Note||'—'}</td>
+    </tr>`).join('')}
+    <tr style="font-weight:700;background:#f9f6ef;">
+      <td colspan="3" style="text-align:right;">মোট ব্যয়:</td>
+      <td>৳${total.toLocaleString()}</td><td></td>
+    </tr></tbody></table>`;
+  PrintUtil.print('ব্যয়ের তালিকা', html, meta);
+}
+
 function renderExpenses() {
-  const q   = document.getElementById('filterExpense')?.value.trim().toLowerCase() || '';
-  const cat = document.getElementById('filterCat')?.value || '';
-  let list  = allExpenses;
-  if (q)   list = list.filter(e => String(e.Title).toLowerCase().includes(q));
-  if (cat) list = list.filter(e => e.Category === cat);
+  const q    = document.getElementById('filterExpense')?.value.trim().toLowerCase() || '';
+  const cat  = document.getElementById('filterCat')?.value || '';
+  const from = document.getElementById('expFrom')?.value;
+  const to   = document.getElementById('expTo')?.value;
+  let list = allExpenses;
+  if (q)    list = list.filter(e => e.Title.toLowerCase().includes(q));
+  if (cat)  list = list.filter(e => e.Category === cat);
+  if (from) list = list.filter(e => e.Date && new Date(e.Date) >= new Date(from));
+  if (to)   list = list.filter(e => e.Date && new Date(e.Date) <= new Date(to+'T23:59:59'));
 
   const body  = document.getElementById('expenseBody');
   const empty = document.getElementById('expenseEmpty');
@@ -216,7 +248,6 @@ async function submitExpense() {
     category: document.getElementById('eCategory').value,
     note:     document.getElementById('eNote').value.trim(),
   };
-  const msg = document.getElementById('eMsg');
   if (!payload.title)  { Toast.error('বিবরণ আবশ্যক'); return; }
   if (!payload.amount || Number(payload.amount) <= 0) { Toast.error('সঠিক পরিমাণ দিন'); return; }
 
@@ -231,7 +262,7 @@ async function submitExpense() {
 }
 
 async function removeExpense(id) {
-  if (!confirm('এই ব্যয় এন্ট্রিটি মুছে ফেলতে চান?')) return;
+  if (!await Confirm.show('এই ব্যয় এন্ট্রিটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteExpense', { id });
   loadAll();
 }
