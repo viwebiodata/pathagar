@@ -301,7 +301,8 @@
       <p>পাঠাগারে অসংখ্য বই প্রদান করেন কবিরুল ইসলাম কবির, সভাপতি, ইসলামী ছাত্রশিবির, আমির আলী হল, রাজশাহী বিশ্ববিদ্যালয়।</p>
 
       <div class="closing-box">
-        সবার আন্তরিক দোয়া ও সহযোগিতায় "শহীদ আইয়ুব আলী স্মৃতি সংসদ ও পাঠাগার"-এর গঠনতন্ত্র অনুযায়ী পূর্ণাঙ্গ কার্যক্রম পুনরায় শুরু হবে—এই প্রত্যাশা রইল, ইনশাআল্লাহ।
+        <p style="margin-bottom:14px;">সবার আন্তরিক দোয়া ও সহযোগিতায় "শহীদ আইয়ুব আলী স্মৃতি সংসদ ও পাঠাগার"-এর গঠনতন্ত্র অনুযায়ী পূর্ণাঙ্গ কার্যক্রম পুনরায় শুরু হবে—এই প্রত্যাশা রইল, ইনশাআল্লাহ।</p>
+        <button class="btn brass" onclick="ShareUtil.show('শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার','🕌 শহীদ আইয়ুব আলী — ঘোড়াঘাটের প্রথম শহীদের স্মৃতিতে প্রতিষ্ঠিত পাঠাগার। কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর।')">🔗 এই পাঠাগারের কথা শেয়ার করুন</button>
       </div>
     </div>
 
@@ -398,7 +399,11 @@ async function loadNotices() {
         <span class="acc-toggle" id="ai-n${n.ID}">${i===0?'▲ সংক্ষিপ্ত':'▼ বিস্তারিত'}</span>
       </div>
       <div class="acc-body ${i===0?'open':''}" id="ab-n${n.ID}">
-        <div class="acc-body-inner">${n.Content}</div>
+        <div class="acc-body-inner">${n.Content}
+          <div style="margin-top:10px;">
+            <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,'📢 '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${n.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
+          </div>
+        </div>
       </div>
     </div>`).join('');
 }
@@ -414,7 +419,11 @@ async function loadProjects() {
         <span class="acc-toggle" id="ai-p${p.ID}">${i===0?'▲ সংক্ষিপ্ত':'▼ বিস্তারিত'}</span>
       </div>
       <div class="acc-body ${i===0?'open':''}" id="ab-p${p.ID}">
-        <div class="acc-body-inner">${p.Description||'<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}</div>
+        <div class="acc-body-inner">${p.Description||'<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
+          <div style="margin-top:10px;">
+            <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,'🏗️ '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${p.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
+          </div>
+        </div>
       </div>
     </div>`).join('');
 }
