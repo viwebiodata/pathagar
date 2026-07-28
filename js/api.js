@@ -290,6 +290,7 @@ function renderNav(active) {
     ['projects.html', 'প্রকল্প'],
     ['donations.html','অনুদান'],
     ['finance.html',  'আয়-ব্যয়'],
+    ['gallery.html',  '📷 গ্যালারি'],
   ];
 
   const links = items.map(([href, label]) =>
