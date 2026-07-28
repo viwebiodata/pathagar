@@ -159,7 +159,7 @@ function handleNoticePhoto(evt) {
 }
 
 async function removeNotice(id) {
-  if (!await Confirm.show('নোটিশটি মুছে ফেলতে চান?')) return;
+  if (!await Dialog.confirm('নোটিশটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteNotice', { id });
   loadNotices();
 }
