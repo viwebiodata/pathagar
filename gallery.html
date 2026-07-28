@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ফটো গ্যালারি — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+/* ===== গ্যালারি গ্রিড ===== */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.gallery-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--line);
+  aspect-ratio: 4/3;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.gallery-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(28,43,57,.22); }
+.gallery-card img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block; transition: transform 0.3s;
+}
+.gallery-card:hover img { transform: scale(1.05); }
+.gallery-card .overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(28,43,57,.75) 0%, transparent 55%);
+  opacity: 0; transition: opacity 0.2s;
+  display: flex; align-items: flex-end; padding: 12px;
+}
+.gallery-card:hover .overlay { opacity: 1; }
+.gallery-card .overlay-text { color: #fff; font-size: .82rem; line-height: 1.4; }
+.gallery-card .overlay-text .cat-badge {
+  display: inline-block; font-size: .68rem; padding: 2px 8px;
+  background: var(--brass); border-radius: 20px; margin-bottom: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.gallery-card .admin-del {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(154,59,59,.85); color: #fff;
+  border: none; border-radius: 50%; width: 30px; height: 30px;
+  cursor: pointer; font-size: .9rem; display: none;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.gallery-card:hover .admin-del.visible { display: flex; }
+
+/* ===== Lightbox ===== */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(10,16,22,.93);
+  z-index: 9000; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: _tin .2s ease;
+}
+.lightbox-inner {
+  position: relative; max-width: 900px; width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+}
+.lightbox-img {
+  max-width: 100%; max-height: 75vh; object-fit: contain;
+  border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.lightbox-caption {
+  color: #e8e0d0; text-align: center; margin-top: 14px;
+  font-size: .95rem; line-height: 1.6;
+  font-family: 'Hind Siliguri', sans-serif;
+}
+.lightbox-meta {
+  font-family: 'IBM Plex Mono', monospace; font-size: .72rem;
+  color: #A9793C; margin-top: 4px;
+}
+.lightbox-close {
+  position: fixed; top: 18px; right: 22px;
+  background: rgba(255,255,255,.12); color: #fff;
+  border: none; border-radius: 50%; width: 44px; height: 44px;
+  font-size: 1.3rem; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: background .15s; z-index: 9001;
+}
+.lightbox-close:hover { background: rgba(255,255,255,.22); }
+.lightbox-nav {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,.1); color: #fff;
+  border: none; border-radius: 50%; width: 48px; height: 48px;
+  font-size: 1.4rem; cursor: pointer; z-index: 9001;
+  transition: background .15s; display: flex; align-items: center; justify-content: center;
+}
+.lightbox-nav:hover { background: rgba(255,255,255,.22); }
+.lightbox-nav.prev { left: 14px; }
+.lightbox-nav.next { right: 14px; }
+.lightbox-counter {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,.5); font-family: 'IBM Plex Mono', monospace;
+  font-size: .78rem; z-index: 9001;
+}
+
+/* ===== ক্যাটাগরি ফিল্টার ===== */
+.cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+.cat-tab {
+  padding: 7px 16px; border-radius: 20px; border: 1px solid var(--line);
+  background: var(--card); color: var(--muted); cursor: pointer;
+  font-family: 'Hind Siliguri', sans-serif; font-size: .88rem;
+  transition: all .15s;
+}
+.cat-tab:hover, .cat-tab.active {
+  background: var(--ink); color: var(--paper); border-color: var(--ink);
+}
+
+/* ===== আপলোড ফর্ম ===== */
+.upload-preview-grid {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+}
+.upload-thumb {
+  width: 80px; height: 80px; object-fit: cover;
+  border-radius: var(--radius); border: 2px solid var(--brass);
+}
+
+@media (max-width: 480px) {
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .lightbox-nav { width: 36px; height: 36px; font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+<div id="navRoot"></div>
+
+<main class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;">
+    <div class="section-label" style="margin:0;">📷 ফটো গ্যালারি</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
+
+  <!-- অ্যাডমিন আপলোড ফর্ম -->
+  <div id="adminBlock" class="admin-only-block" style="display:none; margin-bottom:28px;">
+    <span class="admin-badge">নতুন ছবি আপলোড করুন</span>
+    <div class="grid-2">
+      <div>
+        <label>ছবি বেছে নিন <span style="color:var(--rust);">*</span></label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label class="btn outline" style="cursor:pointer;margin:0;">
+            📷 ছবি / ক্যামেরা
+            <input type="file" accept="image/*" capture="environment" id="gPhotoInput" multiple style="display:none;" onchange="handleGalleryPhotos(event)" />
+          </label>
+          <span id="gPhotoCount" style="font-size:.82rem;color:var(--muted);"></span>
+        </div>
+        <div class="upload-preview-grid" id="uploadPreviews"></div>
+      </div>
+      <div>
+        <label>বিবরণ / ক্যাপশন</label>
+        <input id="gCaption" placeholder="ছবির বিবরণ লিখুন..." />
+        <label>ক্যাটাগরি</label>
+        <select id="gCategory">
+          <option value="সাধারণ">সাধারণ</option>
+          <option value="অনুষ্ঠান">অনুষ্ঠান</option>
+          <option value="সভা">সভা / মিটিং</option>
+          <option value="খেলাধুলা">খেলাধুলা</option>
+          <option value="শিক্ষা">শিক্ষা কার্যক্রম</option>
+          <option value="পাঠাগার">পাঠাগার</option>
+          <option value="পুরস্কার">পুরস্কার বিতরণ</option>
+          <option value="অন্যান্য">অন্যান্য</option>
+        </select>
+        <label>তারিখ (ঐচ্ছিক)</label>
+        <input id="gDate" type="date" />
+      </div>
+    </div>
+    <button class="btn brass" style="margin-top:18px;" onclick="uploadPhotos()">📤 আপলোড করুন</button>
+    <div id="gProgress" style="display:none;margin-top:12px;">
+      <div style="background:var(--line);border-radius:20px;height:8px;overflow:hidden;">
+        <div id="gProgressBar" style="background:var(--brass);height:100%;width:0%;transition:width .3s;"></div>
+      </div>
+      <div id="gProgressText" style="font-size:.82rem;color:var(--muted);margin-top:6px;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- ক্যাটাগরি ট্যাব -->
+  <div class="cat-tabs" id="catTabs">
+    <button class="cat-tab active" onclick="filterCat('all', this)">সব</button>
+    <button class="cat-tab" onclick="filterCat('সাধারণ', this)">সাধারণ</button>
+    <button class="cat-tab" onclick="filterCat('অনুষ্ঠান', this)">অনুষ্ঠান</button>
+    <button class="cat-tab" onclick="filterCat('সভা', this)">সভা</button>
+    <button class="cat-tab" onclick="filterCat('খেলাধুলা', this)">খেলাধুলা</button>
+    <button class="cat-tab" onclick="filterCat('শিক্ষা', this)">শিক্ষা</button>
+    <button class="cat-tab" onclick="filterCat('পাঠাগার', this)">পাঠাগার</button>
+    <button class="cat-tab" onclick="filterCat('নোটিশ', this)">নোটিশ</button>
+    <button class="cat-tab" onclick="filterCat('প্রকল্প', this)">প্রকল্প</button>
+  </div>
+
+  <div class="gallery-grid" id="galleryGrid"></div>
+  <div class="empty-state" id="galleryEmpty" style="display:none;">
+    এখনো কোনো ছবি যোগ করা হয়নি।<br>
+    <span style="font-size:.85rem;color:var(--muted);">অ্যাডমিন লগইন করে উপরের ফর্ম থেকে ছবি আপলোড করুন।</span>
+  </div>
+</main>
+
+<!-- লাইটবক্স -->
+<div id="lightbox" class="lightbox" style="display:none;" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <img id="lbImg" class="lightbox-img" src="" alt="" />
+    <div class="lightbox-caption" id="lbCaption"></div>
+    <div class="lightbox-meta" id="lbMeta"></div>
+  </div>
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav prev" onclick="navLightbox(-1); event.stopPropagation()">‹</button>
+  <button class="lightbox-nav next" onclick="navLightbox(1); event.stopPropagation()">›</button>
+  <div class="lightbox-counter" id="lbCounter"></div>
+</div>
+
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('gallery.html');
+renderRefreshBtn(loadGallery);
+
+let allPhotos = [];
+let filteredPhotos = [];
+let currentLbIndex = 0;
+
+// ===== অ্যাডমিন =====
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+}
+
+// ===== ছবি প্রিভিউ (একাধিক) =====
+let pendingPhotos = []; // [{ dataUrl, file }]
+function handleGalleryPhotos(evt) {
+  const files = Array.from(evt.target.files);
+  if (!files.length) return;
+  pendingPhotos = [];
+  document.getElementById('gPhotoCount').textContent = `${files.length}টি ছবি নির্বাচিত`;
+  const previews = document.getElementById('uploadPreviews');
+  previews.innerHTML = '<div style="color:var(--muted);font-size:.82rem;">প্রিভিউ লোড হচ্ছে...</div>';
+
+  const processed = [];
+  files.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 1200, maxH = 900;
+        let { width: w, height: h } = img;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        processed[i] = { dataUrl: canvas.toDataURL('image/jpeg', 0.82), name: file.name };
+        pendingPhotos = processed.filter(Boolean);
+        if (pendingPhotos.length === files.length) {
+          previews.innerHTML = pendingPhotos.map(p =>
+            `<img class="upload-thumb" src="${p.dataUrl}" title="${p.name}" />`
+          ).join('');
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== আপলোড =====
+async function uploadPhotos() {
+  if (!pendingPhotos.length) { Toast.error('অন্তত একটা ছবি বেছে নিন'); return; }
+  const caption  = document.getElementById('gCaption').value.trim();
+  const category = document.getElementById('gCategory').value;
+
+  const prog = document.getElementById('gProgress');
+  const bar  = document.getElementById('gProgressBar');
+  const txt  = document.getElementById('gProgressText');
+  prog.style.display = 'block';
+
+  let done = 0;
+  for (const photo of pendingPhotos) {
+    txt.textContent = `আপলোড হচ্ছে: ${photo.name} (${done + 1}/${pendingPhotos.length})`;
+    bar.style.width = (done / pendingPhotos.length * 100) + '%';
+    const res = await Api.post('addGalleryPhoto', {
+      image: photo.dataUrl,
+      caption: caption || photo.name,
+      category,
+    });
+    if (res.error) { Toast.error(res.error); }
+    done++;
+    bar.style.width = (done / pendingPhotos.length * 100) + '%';
+  }
+
+  prog.style.display = 'none';
+  bar.style.width = '0%';
+  Toast.success(`${done}টি ছবি সফলভাবে আপলোড হয়েছে ✓`);
+  pendingPhotos = [];
+  document.getElementById('gPhotoInput').value = '';
+  document.getElementById('gCaption').value = '';
+  document.getElementById('uploadPreviews').innerHTML = '';
+  document.getElementById('gPhotoCount').textContent = '';
+  loadGallery();
+}
+
+// ===== লোড গ্যালারি =====
+async function loadGallery() {
+  allPhotos = await Api.get('listGallery') || [];
+  filteredPhotos = [...allPhotos];
+  renderGallery();
+}
+
+// ===== ক্যাটাগরি ফিল্টার =====
+function filterCat(cat, btn) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  filteredPhotos = cat === 'all' ? [...allPhotos] : allPhotos.filter(p => p.Category === cat);
+  renderGallery();
+}
+
+// ===== রেন্ডার =====
+function renderGallery() {
+  const grid  = document.getElementById('galleryGrid');
+  const empty = document.getElementById('galleryEmpty');
+  if (!filteredPhotos.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = filteredPhotos.map((p, i) => {
+    const delBtn = isAdmin()
+      ? `<button class="admin-del visible" title="ডিলিট" onclick="event.stopPropagation(); deletePhoto('${p.ID}')">✕</button>`
+      : '';
+    return `
+      <div class="gallery-card" onclick="openLightbox(${i})">
+        <img src="${p.ImageURL}" loading="lazy" alt="${p.Caption || ''}" />
+        <div class="overlay">
+          <div class="overlay-text">
+            <span class="cat-badge">${p.Category || 'সাধারণ'}</span><br>
+            ${p.Caption ? `<span>${p.Caption}</span>` : ''}
+          </div>
+        </div>
+        ${delBtn}
+      </div>`;
+  }).join('');
+}
+
+// ===== ডিলিট =====
+async function deletePhoto(id) {
+  if (!await Dialog.confirm('ছবিটি মুছে ফেলতে চান?', { okText: 'হ্যাঁ, মুছুন' })) return;
+  const res = await Api.post('deleteGalleryPhoto', { id });
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('ছবি মুছে ফেলা হয়েছে।');
+  loadGallery();
+}
+
+// ===== লাইটবক্স =====
+function openLightbox(index) {
+  currentLbIndex = index;
+  showLightboxPhoto();
+  document.getElementById('lightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // কীবোর্ড নেভিগেশন
+  document.addEventListener('keydown', lbKeyHandler);
+}
+
+function showLightboxPhoto() {
+  const p = filteredPhotos[currentLbIndex];
+  document.getElementById('lbImg').src = p.ImageURL;
+  document.getElementById('lbCaption').textContent = p.Caption || '';
+  document.getElementById('lbMeta').textContent =
+    `${p.Category || ''} ${p.Date ? '· ' + fmtDate(p.Date) : ''}`.trim();
+  document.getElementById('lbCounter').textContent =
+    `${currentLbIndex + 1} / ${filteredPhotos.length}`;
+}
+
+function navLightbox(dir) {
+  currentLbIndex = (currentLbIndex + dir + filteredPhotos.length) % filteredPhotos.length;
+  showLightboxPhoto();
+}
+
+function closeLightbox(e) {
+  if (e && e.target !== e.currentTarget && e.target.id !== 'lightbox') return;
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', lbKeyHandler);
+}
+
+function lbKeyHandler(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navLightbox(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navLightbox(-1);
+  if (e.key === 'Escape') closeLightbox({target: null});
+}
+
+onAdminStateChange();
+loadGallery();
+</script>
+</body>
+</html>
