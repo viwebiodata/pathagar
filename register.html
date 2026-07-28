@@ -178,19 +178,17 @@ async function registerMember() {
     transTo:        payMethod === 'online' ? document.getElementById('mTransTo').value.trim() : '',
     transactionId:  payMethod === 'online' ? document.getElementById('mTransactionId').value.trim() : '',
   };
-
-  const msg = document.getElementById('regMsg');
   if (!payload.name) { Toast.error('নাম আবশ্যক'); return; }
   if (!payload.phone) { Toast.error('ফোন নম্বর আবশ্যক'); return; }
   if (payMethod === 'online' && !payload.transactionId) {
     Toast.error('অনলাইন পেমেন্টে ট্রানজেকশন নম্বর আবশ্যক'); return;
   }
 
-  const _t = Toast.loading('তথ্য জমা হচ্ছে, অপেক্ষা করুন...');
+  Toast.loading('তথ্য জমা হচ্ছে, অপেক্ষা করুন...');
   const res = await Api.post('registerMember', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
+  if (res.error) { Toast.error(res.error); return; }
 
-  Toast.ok('নিবন্ধন সম্পন্ন হয়েছে! সদস্য আইডি: ' + res.id, _t);
+  Toast.success('নিবন্ধন সম্পন্ন হয়েছে! সদস্য আইডি: ' + res.id);
   document.getElementById('regMsg').innerHTML = `
     <div class="msg success" style="margin-top:14px; padding:16px;">
       ✅ নিবন্ধন সম্পন্ন হয়েছে!<br>
