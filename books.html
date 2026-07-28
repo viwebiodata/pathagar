@@ -7,10 +7,10 @@
 <link rel="stylesheet" href="css/style.css" />
 <style>
   /* ক্রপ UI */
-  .crop-wrap { position:relative; width:100%; max-width:340px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:#111; display:none; }
+  .crop-wrap { position:relative; width:100%; max-width:340px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:#111; display:none; touch-action:none; overscroll-behavior:contain; }
   .crop-wrap img { display:block; width:100%; }
-  .crop-box { position:absolute; border:2px solid var(--brass); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move; touch-action:none; }
-  .crop-handle { position:absolute; width:12px; height:12px; background:var(--brass); border-radius:50%; right:-6px; bottom:-6px; cursor:se-resize; touch-action:none; }
+  .crop-box { position:absolute; border:2px solid var(--brass); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move; touch-action:none; user-select:none; }
+  .crop-handle { position:absolute; width:14px; height:14px; background:var(--brass); border-radius:50%; right:-7px; bottom:-7px; cursor:se-resize; touch-action:none; }
 
   /* বই কার্ড কভার */
   .book-cover { width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:var(--radius); border:1px solid var(--line); margin-bottom:10px; background:var(--line); }
@@ -86,7 +86,7 @@
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
         <label class="btn outline" style="cursor:pointer; margin:0;">
           📷 ক্যামেরা / গ্যালারি
-          <input type="file" accept="image/*" capture="environment" id="bCoverInput" style="display:none;" onchange="loadCoverImage(event,'add')" />
+          <input type="file" accept="image/*" id="bCoverInput" style="display:none;" onchange="loadCoverImage(event,'add')" />
         </label>
         <span id="bCoverName" style="font-size:0.82rem; color:var(--muted);"></span>
       </div>
@@ -168,10 +168,16 @@ function loadCoverImage(evt, prefix) {
   reader.readAsDataURL(file);
 }
 
+let _cropCleanup = null;
+
 function initCrop(src, prefix) {
+  // আগের drag listener পরিষ্কার করি
+  if (_cropCleanup) { _cropCleanup(); _cropCleanup = null; }
+
   const wrap = document.getElementById(prefix + 'CropWrap');
   const img  = document.getElementById(prefix + 'CropImg');
-  img.src = src;
+
+  // আগে visible করি, তারপর ছবি লোড
   wrap.style.display = 'block';
   document.getElementById(prefix + 'CropBtn').style.display = 'inline-block';
   document.getElementById(prefix === 'add' ? 'addCoverPreview' : 'editCoverPreview').style.display = 'none';
@@ -179,20 +185,25 @@ function initCrop(src, prefix) {
   else editCoverDataUrl = '';
 
   img.onload = () => {
-    const box = document.getElementById(prefix + 'CropBox');
-    const w = wrap.offsetWidth;
+    // ছবি লোড হওয়ার পর width মাপা — নিশ্চিতভাবে সঠিক পাবে
+    const w = wrap.offsetWidth || 300;
     const ratio = img.naturalHeight / img.naturalWidth;
     const iH = w * ratio;
     wrap.style.height = iH + 'px';
 
-    // ডিফল্ট ক্রপ বক্স — মাঝখানে ৩:৪ অনুপাত
-    const bw = Math.min(w * 0.7, w);
+    const box = document.getElementById(prefix + 'CropBox');
+    const bw = Math.min(w * 0.75, w);
     const bh = bw * (4/3);
-    let bx = (w - bw) / 2;
-    let by = (iH - bh) / 2;
-    setBox(box, bx, by, bw, bh, iH, w);
-    makeDraggable(box, document.getElementById(prefix + 'CropHandle'), prefix, iH, w);
+    const bx = (w - bw) / 2;
+    const by = Math.max(0, (iH - bh) / 2);
+    box.style.left   = bx + 'px';
+    box.style.top    = by + 'px';
+    box.style.width  = bw + 'px';
+    box.style.height = bh + 'px';
+    _cropCleanup = makeDraggable(box, document.getElementById(prefix + 'CropHandle'), prefix, iH, w);
   };
+
+  img.src = src;
 }
 
 function setBox(box, x, y, w, h, maxH, maxW) {
@@ -205,15 +216,8 @@ function setBox(box, x, y, w, h, maxH, maxW) {
 function makeDraggable(box, handle, prefix, imgH, imgW) {
   let startX, startY, startL, startT, startW, startH, mode;
 
-  function onDown(e, m) {
-    mode = m;
-    const p = e.touches ? e.touches[0] : e;
-    startX = p.clientX; startY = p.clientY;
-    startL = parseInt(box.style.left); startT = parseInt(box.style.top);
-    startW = parseInt(box.style.width); startH = parseInt(box.style.height);
-    e.preventDefault();
-  }
   function onMove(e) {
+    if (!mode) return; // dragging না হলে কিছুই করব না
     const p = e.touches ? e.touches[0] : e;
     const dx = p.clientX - startX, dy = p.clientY - startY;
     if (mode === 'move') {
@@ -227,34 +231,60 @@ function makeDraggable(box, handle, prefix, imgH, imgW) {
         box.style.width = nw + 'px'; box.style.height = nh + 'px';
       }
     }
+    e.preventDefault(); // শুধু drag চলার সময়ই scroll ব্লক হবে
+  }
+  function onUp() {
+    mode = null;
+    // drag শেষ হলে scroll আবার চালু
+    document.body.style.overflow = '';
+  }
+  function onDown(e, m) {
+    mode = m;
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    startL = parseInt(box.style.left)  || 0;
+    startT = parseInt(box.style.top)   || 0;
+    startW = parseInt(box.style.width) || 60;
+    startH = parseInt(box.style.height)|| 80;
+    document.body.style.overflow = 'hidden'; // drag এর সময়ই শুধু
     e.preventDefault();
   }
-  function onUp() { mode = null; }
 
-  box.addEventListener('mousedown',  e => onDown(e, 'move'));
-  box.addEventListener('touchstart', e => onDown(e, 'move'), { passive:false });
+  box.addEventListener('mousedown',    e => onDown(e, 'move'));
+  box.addEventListener('touchstart',   e => onDown(e, 'move'),   { passive: false });
   handle.addEventListener('mousedown',  e => { e.stopPropagation(); onDown(e, 'resize'); });
-  handle.addEventListener('touchstart', e => { e.stopPropagation(); onDown(e, 'resize'); }, { passive:false });
+  handle.addEventListener('touchstart', e => { e.stopPropagation(); onDown(e, 'resize'); }, { passive: false });
+
+  // mousemove/touchmove: passive:true যাতে সাধারণ scroll ব্লক না হয়
+  // কিন্তু drag চলার সময় onMove এর ভেতরে preventDefault() করা হয়
   document.addEventListener('mousemove', onMove);
-  document.addEventListener('touchmove', onMove, { passive:false });
-  document.addEventListener('mouseup', onUp);
-  document.addEventListener('touchend', onUp);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('mouseup',   onUp);
+  document.addEventListener('touchend',  onUp);
+
+  // crop wrap লুকানোর সময় listener সরানোর জন্য cleanup function রিটার্ন করছি
+  return function cleanup() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('mouseup',   onUp);
+    document.removeEventListener('touchend',  onUp);
+    document.body.style.overflow = '';
+  };
 }
 
 function cropAndPreview(prefix) {
-  const wrap = document.getElementById(prefix + 'CropWrap');
-  const img  = document.getElementById(prefix + 'CropImg');
-  const box  = document.getElementById(prefix + 'CropBox');
+  const wrap   = document.getElementById(prefix + 'CropWrap');
+  const img    = document.getElementById(prefix + 'CropImg');
+  const box    = document.getElementById(prefix + 'CropBox');
   const canvas = document.getElementById(prefix + 'CropCanvas');
 
   const scaleX = img.naturalWidth  / wrap.offsetWidth;
   const scaleY = img.naturalHeight / wrap.offsetHeight;
-  const sx = parseInt(box.style.left)  * scaleX;
-  const sy = parseInt(box.style.top)   * scaleY;
-  const sw = parseInt(box.style.width) * scaleX;
-  const sh = parseInt(box.style.height)* scaleY;
+  const sx = parseInt(box.style.left)   * scaleX;
+  const sy = parseInt(box.style.top)    * scaleY;
+  const sw = parseInt(box.style.width)  * scaleX;
+  const sh = parseInt(box.style.height) * scaleY;
 
-  // আউটপুট: সর্বোচ্চ 400×533 (3:4)
   const outW = 400, outH = 533;
   canvas.width = outW; canvas.height = outH;
   canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
@@ -268,6 +298,11 @@ function cropAndPreview(prefix) {
   preview.style.display = 'block';
   wrap.style.display = 'none';
   document.getElementById(prefix + 'CropBtn').style.display = 'none';
+
+  // ক্রপ শেষ — scroll পুনরায় চালু করা, stale drag mode বাতিল
+  if (_cropCleanup) { _cropCleanup(); _cropCleanup = null; }
+  document.body.style.overflow = '';
+  document.body.style.touchAction = '';
 }
 
 // ---------- বই কার্ড ----------
@@ -364,10 +399,10 @@ async function addBook() {
   if (!payload.code || !payload.title || !payload.author) {
     Toast.error('কোড, নাম ও লেখক আবশ্যক'); return;
   }
-  const _t = Toast.loading('বই সংরক্ষণ হচ্ছে...');
+  Toast.loading('বই সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addBook', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('বই সফলভাবে যোগ হয়েছে ✓', _t);
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('বই সফলভাবে যোগ হয়েছে ✓');
   ['bCode','bTitle','bAuthor','bCategory'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bCopies').value = 1;
   document.getElementById('bCoverInput').value = '';
@@ -379,7 +414,7 @@ async function addBook() {
 }
 
 async function removeBook(code) {
-  if (!await Confirm.show(`কোড ${code} এর বইটি মুছে ফেলতে চান?`, {okLabel:'হ্যাঁ, মুছুন'})) return;
+  if (!await Dialog.confirm(`কোড ${code} এর বইটি মুছে ফেলতে চান?`, {okText:'হ্যাঁ, মুছুন'}))) return;
   await Api.post('deleteBook', { code });
   loadBooks();
 }
@@ -406,7 +441,7 @@ function openEdit(code) {
         ${b.CoverURL ? `<img src="${b.CoverURL}" style="width:60px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:2px; margin-bottom:8px; display:block;" />` : ''}
         <label class="btn outline" style="cursor:pointer; display:inline-block; margin-bottom:8px;">
           📷 ছবি বদলান
-          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="loadCoverImage(event,'edit')" />
+          <input type="file" accept="image/*" style="display:none;" onchange="loadCoverImage(event,'edit')" />
         </label>
         <span id="eCoverName" style="font-size:0.82rem; color:var(--muted); margin-left:8px;"></span>
         <div id="editCropWrap" class="crop-wrap"><img id="editCropImg" /><div id="editCropBox" class="crop-box"><div class="crop-handle" id="editCropHandle"></div></div></div>
