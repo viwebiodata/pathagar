@@ -35,6 +35,15 @@
     <input id="pTitle" placeholder="প্রকল্পের নাম" />
     <label>বিবরণ</label>
     <textarea id="pDescription" rows="4" style="resize:vertical;"></textarea>
+    <label style="margin-top:14px;">ছবি (ঐচ্ছিক — গ্যালারিতেও যুক্ত হবে)</label>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+      <label class="btn outline" style="cursor:pointer;margin:0;">
+        📷 ছবি যোগ করুন
+        <input type="file" accept="image/*" capture="environment" id="pPhotoInput" style="display:none;" onchange="handleProjectPhoto(event)" />
+      </label>
+      <span id="pPhotoName" style="font-size:.82rem;color:var(--muted);"></span>
+    </div>
+    <img id="pPhotoPreview" style="display:none;width:140px;height:100px;object-fit:cover;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;" />
     <button class="btn brass" style="margin-top:18px;" onclick="addProject()">যোগ করুন</button>
     <div id="pMsg"></div>
   </div>
@@ -89,6 +98,7 @@ async function loadProjects() {
         </div>
         <div class="project-body ${isFeatured ? 'open' : ''}" id="pb-${p.ID}">
           <div class="project-body-inner">
+            ${p.ImageURL ? `<img src="${p.ImageURL}" style="width:100%;max-height:280px;object-fit:cover;border-radius:var(--radius);margin-bottom:12px;" />` : ''}
             ${p.Description || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
             <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
               ${adminBtn}
@@ -100,19 +110,49 @@ async function loadProjects() {
   }).join('');
 }
 
+let _projectPhotoDataUrl = '';
+function handleProjectPhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  document.getElementById('pPhotoName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1200, maxH = 900;
+      let { width: w, height: h } = img;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      _projectPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const prev = document.getElementById('pPhotoPreview');
+      prev.src = _projectPhotoDataUrl;
+      prev.style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 async function addProject() {
   const payload = {
     title:       document.getElementById('pTitle').value.trim(),
     description: document.getElementById('pDescription').value.trim(),
+    image:       _projectPhotoDataUrl,
   };
   if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
-  const _t = Toast.loading('প্রকল্প সংরক্ষণ হচ্ছে...');
+  Toast.loading('প্রকল্প সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addProject', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('প্রকল্প সফলভাবে যোগ হয়েছে ✓', _t);
-  msg.innerHTML = '';
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('প্রকল্প সফলভাবে যোগ হয়েছে ✓');
   document.getElementById('pTitle').value = '';
   document.getElementById('pDescription').value = '';
+  document.getElementById('pPhotoInput').value = '';
+  document.getElementById('pPhotoPreview').style.display = 'none';
+  document.getElementById('pPhotoName').textContent = '';
+  _projectPhotoDataUrl = '';
   loadProjects();
 }
 
