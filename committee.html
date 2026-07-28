@@ -104,11 +104,10 @@ async function addCommittee() {
   if (!position) {
     Toast.error('পদবি দিন'); return;
   }
-  const _t = Toast.loading('কমিটিতে যোগ হচ্ছে...');
+  Toast.loading('কমিটিতে যোগ হচ্ছে...');
   const res = await Api.post('addCommittee', { memberId, position });
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('কমিটিতে সফলভাবে যোগ করা হয়েছে ✓', _t);
-  msg.innerHTML = '';
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('কমিটিতে সফলভাবে যোগ করা হয়েছে ✓');
   document.getElementById('cMemberInput').value = '';
   loadCommittee();
 }
@@ -156,7 +155,7 @@ async function loadCommittee() {
 }
 
 async function removeCommittee(id) {
-  if (!await Confirm.show('কমিটি থেকে বাদ দিতে চান?')) return;
+  if (!await Dialog.confirm('কমিটি থেকে বাদ দিতে চান?')) return;
   await Api.post('deleteCommittee', { id });
   async function _refresh() { await Promise.all([loadCommittee(), loadMemberOptions()]); }
   renderRefreshBtn(_refresh);
