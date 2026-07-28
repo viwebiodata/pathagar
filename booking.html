@@ -129,10 +129,10 @@ async function submitBooking() {
   if (!payload.bookCode || !payload.memberId) {
     Toast.error('বই কোড ও সদস্য আইডি দিন'); return;
   }
-  const _t = Toast.loading('বুকিং সংরক্ষণ হচ্ছে...');
+  Toast.loading('বুকিং সংরক্ষণ হচ্ছে...');
   const res = await Api.post('createBooking', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok(`বুকিং সম্পন্ন: "${res.bookTitle}" → ${res.memberName}`, _t);
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success(`বুকিং সম্পন্ন: "${res.bookTitle}" → ${res.memberName}`);
   document.getElementById('fBookCode').value = '';
   document.getElementById('fMemberId').value = '';
   document.getElementById('fDueDate').value = '';
@@ -227,14 +227,14 @@ async function loadBookings() {
 }
 
 async function markReturned(id) {
-  if (!await Confirm.show('বইটি ফেরত এসেছে বলে চিহ্নিত করবেন?')) return;
+  if (!await Dialog.confirm('বইটি ফেরত এসেছে বলে চিহ্নিত করবেন?')) return;
   const res = await Api.post('returnBooking', { id, returnDate: toInputDate(new Date()) });
   if (res.error) { Toast.error(res.error); return; }
   loadBookings();
 }
 
 async function removeBooking(id) {
-  if (!await Confirm.show('এই বুকিং রেকর্ডটি মুছে ফেলতে চান?')) return;
+  if (!await Dialog.confirm('এই বুকিং রেকর্ডটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteBooking', { id });
   loadBookings();
 }
