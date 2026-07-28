@@ -37,6 +37,15 @@
     <input id="nTitle" placeholder="নোটিশের শিরোনাম" />
     <label>বিস্তারিত</label>
     <textarea id="nContent" rows="4" style="resize:vertical;"></textarea>
+    <label style="margin-top:14px;">ছবি (ঐচ্ছিক — গ্যালারিতেও যুক্ত হবে)</label>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+      <label class="btn outline" style="cursor:pointer;margin:0;">
+        📷 ছবি যোগ করুন
+        <input type="file" accept="image/*" capture="environment" id="nPhotoInput" style="display:none;" onchange="handleNoticePhoto(event)" />
+      </label>
+      <span id="nPhotoName" style="font-size:.82rem;color:var(--muted);"></span>
+    </div>
+    <img id="nPhotoPreview" style="display:none;width:140px;height:100px;object-fit:cover;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;" />
     <button class="btn brass" style="margin-top:18px;" onclick="addNotice()">প্রকাশ করুন</button>
     <div id="nMsg"></div>
   </div>
@@ -91,6 +100,7 @@ async function loadNotices() {
         </div>
         <div class="notice-body ${isFeatured ? 'open' : ''}" id="nb-${n.ID}">
           <div class="notice-body-inner">
+            ${n.ImageURL ? `<img src="${n.ImageURL}" style="width:100%;max-height:280px;object-fit:cover;border-radius:var(--radius);margin-bottom:12px;" />` : ''}
             ${n.Content}
             <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
               ${adminBtn}
@@ -106,16 +116,46 @@ async function addNotice() {
   const payload = {
     title:   document.getElementById('nTitle').value.trim(),
     content: document.getElementById('nContent').value.trim(),
+    image:   _noticePhotoDataUrl,
   };
   if (!payload.title) { Toast.error('শিরোনাম দিন'); return; }
-  const _t = Toast.loading('নোটিশ প্রকাশ হচ্ছে...');
+  Toast.loading('নোটিশ প্রকাশ হচ্ছে...');
   const res = await Api.post('addNotice', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('নোটিশ সফলভাবে প্রকাশিত হয়েছে ✓', _t);
-  msg.innerHTML = '';
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('নোটিশ সফলভাবে প্রকাশিত হয়েছে ✓');
   document.getElementById('nTitle').value = '';
   document.getElementById('nContent').value = '';
+  document.getElementById('nPhotoInput').value = '';
+  document.getElementById('nPhotoPreview').style.display = 'none';
+  document.getElementById('nPhotoName').textContent = '';
+  _noticePhotoDataUrl = '';
   loadNotices();
+}
+
+let _noticePhotoDataUrl = '';
+function handleNoticePhoto(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  document.getElementById('nPhotoName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1200, maxH = 900;
+      let { width: w, height: h } = img;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      _noticePhotoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const prev = document.getElementById('nPhotoPreview');
+      prev.src = _noticePhotoDataUrl;
+      prev.style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 async function removeNotice(id) {
