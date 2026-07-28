@@ -131,20 +131,15 @@ async function submitDonation() {
     transactionId:  payMethod === 'online' ? document.getElementById('dTransactionId').value.trim() : '',
     note:           document.getElementById('dNote').value.trim(),
   };
-  const msg = document.getElementById('dMsg');
   if (!payload.donorName) { Toast.error('দাতার নাম আবশ্যক'); return; }
   if (!payload.amount || Number(payload.amount) <= 0) { Toast.error('সঠিক পরিমাণ দিন'); return; }
   if (payMethod === 'online' && !payload.transactionId) { Toast.error('ট্রানজেকশন নম্বর আবশ্যক'); return; }
 
-  const _t = Toast.loading('অনুদান জমা হচ্ছে...');
+  Toast.loading('অনুদান জমা হচ্ছে...');
   const res = await Api.post('addDonation', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('অনুদান সফলভাবে জমা হয়েছে! ধন্যবাদ', _t);
-  msg.innerHTML = `
-    <div class="msg success" style="padding:14px;">
-      ✅ অনুদান সফলভাবে সংরক্ষিত হয়েছে (রেফারেন্স: <strong class="mono">${res.id}</strong>)<br>
-      <span style="font-size:0.83rem; opacity:.85;">আপনার মূল্যবান সহযোগিতার জন্য আন্তরিক ধন্যবাদ।</span>
-    </div>`;
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('অনুদান সফলভাবে জমা হয়েছে! ধন্যবাদ');
+  Toast.success(`✅ অনুদান সংরক্ষিত! রেফারেন্স: ${res.id} — আন্তরিক ধন্যবাদ।`);
   ['dName','dContact','dAmount','dCashReceivedBy','dTransFrom','dTransTo','dTransactionId','dNote']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('dPayMethod').value = 'cash';
@@ -191,7 +186,7 @@ function renderList() {
 }
 
 async function removeDonation(id) {
-  if (!confirm('এই অনুদান এন্ট্রিটি মুছে ফেলতে চান?')) return;
+  if (!await Dialog.confirm('এই অনুদান এন্ট্রিটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteDonation', { id });
   loadDonations();
 }
