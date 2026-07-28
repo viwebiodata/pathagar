@@ -157,7 +157,7 @@ async function addProject() {
 }
 
 async function removeProject(id) {
-  if (!await Confirm.show('প্রকল্পটি মুছে ফেলতে চান?')) return;
+  if (!await Dialog.confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteProject', { id });
   loadProjects();
 }
