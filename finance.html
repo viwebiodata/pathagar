@@ -251,18 +251,17 @@ async function submitExpense() {
   if (!payload.title)  { Toast.error('বিবরণ আবশ্যক'); return; }
   if (!payload.amount || Number(payload.amount) <= 0) { Toast.error('সঠিক পরিমাণ দিন'); return; }
 
-  const _t = Toast.loading('ব্যয় সংরক্ষণ হচ্ছে...');
+  Toast.loading('ব্যয় সংরক্ষণ হচ্ছে...');
   const res = await Api.post('addExpense', payload);
-  if (res.error) { Toast.err(res.error, _t); return; }
-  Toast.ok('ব্যয় এন্ট্রি সংরক্ষিত হয়েছে ✓', _t);
-  msg.innerHTML = '';
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('ব্যয় এন্ট্রি সংরক্ষিত হয়েছে ✓');
   ['eTitle','eAmount','eNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('eCategory').value = '';
   loadAll();
 }
 
 async function removeExpense(id) {
-  if (!await Confirm.show('এই ব্যয় এন্ট্রিটি মুছে ফেলতে চান?')) return;
+  if (!await Dialog.confirm('এই ব্যয় এন্ট্রিটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteExpense', { id });
   loadAll();
 }
