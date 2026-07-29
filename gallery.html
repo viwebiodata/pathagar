@@ -143,7 +143,7 @@
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <label class="btn outline" style="cursor:pointer;margin:0;">
             📷 ছবি / ক্যামেরা
-            <input type="file" accept="image/*" capture="environment" id="gPhotoInput" multiple style="display:none;" onchange="handleGalleryPhotos(event)" />
+            <input type="file" accept="image/*" id="gPhotoInput" multiple style="display:none;" onchange="handleGalleryPhotos(event)" />
           </label>
           <span id="gPhotoCount" style="font-size:.82rem;color:var(--muted);"></span>
         </div>
@@ -215,6 +215,30 @@
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script>
+
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX_W = 1600, MAX_H = 1200;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+      if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      const mp = (w * h) / 1_000_000;
+      const quality = mp > 2 ? 0.78 : 0.88;
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 renderNav('gallery.html');
 renderRefreshBtn(loadGallery);
 
@@ -235,32 +259,24 @@ function handleGalleryPhotos(evt) {
   pendingPhotos = [];
   document.getElementById('gPhotoCount').textContent = `${files.length}টি ছবি নির্বাচিত`;
   const previews = document.getElementById('uploadPreviews');
-  previews.innerHTML = '<div style="color:var(--muted);font-size:.82rem;">প্রিভিউ লোড হচ্ছে...</div>';
+  previews.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0;">ছবি প্রস্তুত হচ্ছে...</div>';
 
-  const processed = [];
+  let done = 0;
+  const results = new Array(files.length);
+
   files.forEach((file, i) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const maxW = 1200, maxH = 900;
-        let { width: w, height: h } = img;
-        if (w > maxW) { h = h * maxW / w; w = maxW; }
-        if (h > maxH) { w = w * maxH / h; h = maxH; }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        processed[i] = { dataUrl: canvas.toDataURL('image/jpeg', 0.82), name: file.name };
-        pendingPhotos = processed.filter(Boolean);
-        if (pendingPhotos.length === files.length) {
-          previews.innerHTML = pendingPhotos.map(p =>
-            `<img class="upload-thumb" src="${p.dataUrl}" title="${p.name}" />`
-          ).join('');
-        }
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    compressImage(file, dataUrl => {
+      results[i] = { dataUrl, name: file.name };
+      done++;
+      if (done === files.length) {
+        pendingPhotos = results;
+        previews.innerHTML = pendingPhotos.map(p =>
+          `<img class="upload-thumb" src="${p.dataUrl}" title="${p.name}" />`
+        ).join('');
+        document.getElementById('gPhotoCount').textContent =
+          `${files.length}টি ছবি প্রস্তুত`;
+      }
+    });
   });
 }
 
