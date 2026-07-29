@@ -285,10 +285,14 @@ function cropAndPreview(prefix) {
   const sw = parseInt(box.style.width)  * scaleX;
   const sh = parseInt(box.style.height) * scaleY;
 
-  const outW = 400, outH = 533;
+  // আউটপুট: ৬০০×৮০০ (3:4) — বই কভারের জন্য ভালো রেজুলেশন
+  const outW = 600, outH = 800;
   canvas.width = outW; canvas.height = outH;
-  canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
   if (prefix === 'add') addCoverDataUrl = dataUrl;
   else editCoverDataUrl = dataUrl;
@@ -312,14 +316,11 @@ function printBooks() {
   let list = allBooks;
   if (q) list = list.filter(b => b.Title.toLowerCase().includes(q) || b.Author.toLowerCase().includes(q) || String(b.Code).includes(q));
   if (cat) list = list.filter(b => b.Category === cat);
-  const html = `<table>
-    <thead><tr><th>কোড</th><th>বইয়ের নাম</th><th>লেখক</th><th>বিষয়</th><th>মোট কপি</th><th>উপলব্ধ</th></tr></thead>
-    <tbody>${list.map(b => `<tr>
-      <td>${b.Code}</td><td>${b.Title}</td><td>${b.Author}</td>
-      <td>${b.Category||'—'}</td><td>${b.TotalCopies||1}</td>
-      <td><span class="badge ${Number(b.AvailableCopies)>0?'badge-ok':'badge-warn'}">${b.AvailableCopies||0}</span></td>
-    </tr>`).join('')}</tbody></table>`;
-  PrintUtil.print(`বই তালিকা (${list.length}টি)`, html, `<span>মোট: ${list.length}টি বই${cat?' · '+cat:''}</span>`);
+  const catLabel = cat ? ' · ' + cat : '';
+  const html = '<table><thead><tr><th>কোড</th><th>বইয়ের নাম</th><th>লেখক</th><th>বিষয়</th><th>মোট কপি</th><th>উপলব্ধ</th></tr></thead><tbody>' +
+    list.map(b => '<tr><td>' + b.Code + '</td><td>' + b.Title + '</td><td>' + b.Author + '</td><td>' + (b.Category||'—') + '</td><td>' + (b.TotalCopies||1) + '</td><td>' + (b.AvailableCopies||0) + '</td></tr>').join('') +
+    '</tbody></table>';
+  PrintUtil.print('বই তালিকা (' + list.length + 'টি)', html, '<span>মোট: ' + list.length + 'টি বই' + catLabel + '</span>');
 }
 
 function bookCard(b) {
@@ -337,7 +338,9 @@ function bookCard(b) {
       <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
       <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
     </div>` : '';
-  const shareBtn = `<button class="btn small outline" style="margin-top:8px;width:100%;" onclick="ShareUtil.show('${b.Title} — ${b.Author}','📚 ${b.Title} (${b.Author}) — শহীদ আইয়ুব আলী পাঠাগার',window.location.origin+window.location.pathname+'?book=${b.Code}')">🔗 শেয়ার করুন</button>`;
+  const shareTitle = (b.Title + ' — ' + b.Author).replace(/'/g, '\\x27');
+  const shareText  = ('📚 ' + b.Title + ' (' + b.Author + ') — শহীদ আইয়ুব আলী পাঠাগার').replace(/'/g, '\\x27');
+  const shareBtn = `<button class="btn small outline" style="margin-top:8px;width:100%;" onclick="ShareUtil.show('${shareTitle}','${shareText}',window.location.href)">🔗 শেয়ার করুন</button>`;
   return `
     <div class="index-card">
       ${coverHtml}
@@ -414,7 +417,7 @@ async function addBook() {
 }
 
 async function removeBook(code) {
-  if (!await Dialog.confirm(`কোড ${code} এর বইটি মুছে ফেলতে চান?`, {okText:'হ্যাঁ, মুছুন'}))) return;
+  if (!await Dialog.confirm(`কোড ${code} এর বইটি মুছে ফেলতে চান?`, {okText:'হ্যাঁ, মুছুন'})) return;
   await Api.post('deleteBook', { code });
   loadBooks();
 }
@@ -482,29 +485,31 @@ async function loadStats() {
 
   document.getElementById('topBooksList').innerHTML = stats.topBooks.length === 0
     ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
-    : stats.topBooks.map((b, i) => `
-      <div class="rank-row">
-        <div class="rank-num">${i + 1}</div>
-        ${b.coverUrl ? `<img class="rank-cover" src="${b.coverUrl}" />` : `<div class="rank-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>`}
-        <div class="rank-info">
-          <strong>${b.title}</strong>
-          <span>${b.author}</span>
-        </div>
-        <span class="rank-badge">${b.count} বার</span>
-      </div>`).join('');
+    : stats.topBooks.map(function(b, i) {
+        const coverEl = b.coverUrl
+          ? '<img class="rank-cover" src="' + b.coverUrl + '" />'
+          : '<div class="rank-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
+        return '<div class="rank-row">' +
+          '<div class="rank-num">' + (i+1) + '</div>' +
+          coverEl +
+          '<div class="rank-info"><strong>' + b.title + '</strong><span>' + b.author + '</span></div>' +
+          '<span class="rank-badge">' + b.count + ' বার</span>' +
+          '</div>';
+      }).join('');
 
   document.getElementById('topMembersList').innerHTML = stats.topMembers.length === 0
     ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
-    : stats.topMembers.map((m, i) => `
-      <div class="rank-row">
-        <div class="rank-num">${i + 1}</div>
-        ${m.photoUrl ? `<img class="rank-cover" src="${m.photoUrl}" style="border-radius:50%;" />` : `<div class="rank-cover" style="border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>`}
-        <div class="rank-info">
-          <strong>${m.name}</strong>
-          <span class="mono">${m.id}</span>
-        </div>
-        <span class="rank-badge">${m.count}টি বই</span>
-      </div>`).join('');
+    : stats.topMembers.map(function(m, i) {
+        const photoEl = m.photoUrl
+          ? '<img class="rank-cover" src="' + m.photoUrl + '" style="border-radius:50%;" />'
+          : '<div class="rank-cover" style="border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>';
+        return '<div class="rank-row">' +
+          '<div class="rank-num">' + (i+1) + '</div>' +
+          photoEl +
+          '<div class="rank-info"><strong>' + m.name + '</strong><span class="mono">' + m.id + '</span></div>' +
+          '<span class="rank-badge">' + m.count + 'টি বই</span>' +
+          '</div>';
+      }).join('');
 }
 
 onAdminStateChange();
