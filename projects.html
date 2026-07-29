@@ -39,7 +39,7 @@
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
       <label class="btn outline" style="cursor:pointer;margin:0;">
         📷 ছবি যোগ করুন
-        <input type="file" accept="image/*" capture="environment" id="pPhotoInput" style="display:none;" onchange="handleProjectPhoto(event)" />
+        <input type="file" accept="image/*" id="pPhotoInput" style="display:none;" onchange="handleProjectPhoto(event)" />
       </label>
       <span id="pPhotoName" style="font-size:.82rem;color:var(--muted);"></span>
     </div>
@@ -58,6 +58,47 @@
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script>
+
+// ===== স্মার্ট ছবি কম্প্রেস (ভালো রেজুলেশন, ছোট সাইজ) =====
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // মোবাইল ক্যামেরার ছবি সাধারণত ৩-১২ মেগাপিক্সেল
+      // ১৬০০px max width রাখলে রেজুলেশন ভালো থাকে, সাইজ ছোট হয়
+      const MAX_W = 1600, MAX_H = 1200;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      
+      // ঘোরানো ছবির জন্য exif orientation ঠিক করা (iOS)
+      if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+      if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      
+      // ছবির আসল সাইজ অনুযায়ী quality নির্ধারণ
+      // বড় ছবি → একটু কম quality (তবু ভালো দেখায়)
+      // ছোট ছবি → বেশি quality
+      const megapixels = (w * h) / 1_000_000;
+      const quality = megapixels > 2 ? 0.78 : 0.88;
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      
+      // আনুমানিক সাইজ চেক (base64 → bytes)
+      const approxKB = Math.round(dataUrl.length * 0.75 / 1024);
+      console.log(`ছবি compress: ${img.naturalWidth}×${img.naturalHeight} → ${w}×${h}, ~${approxKB}KB`);
+      
+      callback(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 renderNav('projects.html');
 renderRefreshBtn(loadProjects);
 
@@ -115,25 +156,12 @@ function handleProjectPhoto(evt) {
   const file = evt.target.files[0];
   if (!file) return;
   document.getElementById('pPhotoName').textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const maxW = 1200, maxH = 900;
-      let { width: w, height: h } = img;
-      if (w > maxW) { h = h * maxW / w; w = maxW; }
-      if (h > maxH) { w = w * maxH / h; h = maxH; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      _projectPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-      const prev = document.getElementById('pPhotoPreview');
-      prev.src = _projectPhotoDataUrl;
-      prev.style.display = 'block';
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  compressImage(file, dataUrl => {
+    _projectPhotoDataUrl = dataUrl;
+    const prev = document.getElementById('pPhotoPreview');
+    prev.src = dataUrl;
+    prev.style.display = 'block';
+  });
 }
 
 async function addProject() {
