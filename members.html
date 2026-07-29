@@ -268,7 +268,7 @@ async function saveEdit(id) {
 }
 
 async function removeMember(id) {
-  if (!await Dialog.confirm(`আইডি ${id} সদস্যকে মুছে ফেলতে চান?`, {title:'সদস্য মুছে ফেলুন', okText:'হ্যাঁ, মুছুন'}))) return;
+  if (!await Dialog.confirm(`আইডি ${id} সদস্যকে মুছে ফেলতে চান? (কমিটিতে থাকলে সেখান থেকেও বাদ যাবে)`, {title:'সদস্য মুছে ফেলুন', okText:'হ্যাঁ, মুছুন'})) return;
   await Api.post('deleteMember', { id });
   loadMembers();
 }
