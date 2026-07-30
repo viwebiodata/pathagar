@@ -162,6 +162,22 @@
 .notice-preview-card {
   background: var(--card);
   border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  display: block;
+}
+.notice-preview-card:hover {
+  background: rgba(169,121,60,0.04);
+  transform: translateX(3px);
+  box-shadow: 0 3px 12px rgba(28,43,57,0.09);
+}
+
+/* হোমপেজ নোটিশ প্রিভিউ কার্ড */
+.notice-preview-card {
+  background: var(--card);
+  border: 1px solid var(--line);
   border-left: 4px solid var(--brass);
   border-radius: var(--radius);
   margin-bottom: 10px;
@@ -433,21 +449,26 @@ async function loadNotices() {
 async function loadProjects() {
   const projects = await Api.get('listProjects');
   const el = document.getElementById('projectsList');
-  if (!projects||projects.length===0){ el.innerHTML='<p style="color:var(--muted);font-size:.9rem;">কোনো প্রকল্প নেই।</p>'; return; }
-  el.innerHTML = projects.slice(0,5).map((p,i)=>`
-    <div class="acc-item ${i===0?'first':''}">
-      <div class="acc-header" onclick="toggleAcc('p${p.ID}')">
-        <div><div class="acc-date">${fmtDate(p.Date)}</div><div class="acc-title">${p.Title}</div></div>
-        <span class="acc-toggle" id="ai-p${p.ID}">${i===0?'▲ সংক্ষিপ্ত':'▼ বিস্তারিত'}</span>
-      </div>
-      <div class="acc-body ${i===0?'open':''}" id="ab-p${p.ID}">
-        <div class="acc-body-inner">${p.Description||'<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
-          <div style="margin-top:10px;">
-            <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,'🏗️ '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${p.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
-          </div>
-        </div>
-      </div>
-    </div>`).join('');
+  if (!projects || projects.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">কোনো প্রকল্প নেই।</p>';
+    return;
+  }
+  el.innerHTML = projects.slice(0, 4).map(function(p) {
+    const preview = (p.Description || '').replace(/<[^>]+>/g, '').slice(0, 100) + ((p.Description || '').length > 100 ? '...' : '');
+    const thumb = p.ImageURL
+      ? '<img src="' + p.ImageURL + '" style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--line);flex-shrink:0;" />'
+      : '<div style="width:64px;height:64px;background:rgba(95,113,97,.12);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🏗️</div>';
+    return '<a href="projects.html" style="text-decoration:none;display:block;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--sage);border-radius:var(--radius);margin-bottom:8px;transition:background .15s,transform .15s,box-shadow .15s;" onmouseover="this.style.transform=\'translateX(3px)\'" onmouseout="this.style.transform=\'\'">' +
+      '<div style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:.7rem;color:var(--muted);margin-bottom:3px;">' + fmtDate(p.Date) + '</div>' +
+          '<div style="font-family:\'Fraunces\',serif;font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:4px;">' + p.Title + '</div>' +
+          '<div style="font-size:.84rem;color:var(--muted);line-height:1.55;">' + (preview || 'বিবরণ যোগ করা হয়নি।') + '</div>' +
+        '</div>' +
+        thumb +
+      '</div>' +
+    '</a>';
+  }).join('');
 }
 
 loadStats();
