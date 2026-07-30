@@ -6,35 +6,136 @@
 <title>প্রকল্প — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css" />
 <style>
-.project-item { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--brass); margin-bottom: 12px; border-radius: var(--radius); overflow: hidden; }
-.project-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 18px; cursor: pointer; gap: 12px; }
-.project-header:hover { background: rgba(169,121,60,0.05); }
-.project-title-block { flex: 1; }
-.project-date { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
-.project-title { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
-.project-toggle { font-size: 0.8rem; color: var(--brass-dark); white-space: nowrap; flex-shrink: 0; padding-top: 4px; }
-.project-body { padding: 0 18px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s; }
-.project-body.open { max-height: 600px; padding: 0 18px 16px; }
-.project-body-inner { padding-top: 12px; border-top: 1px dashed var(--line); font-size: 0.93rem; line-height: 1.75; color: var(--text); }
-.project-item.featured .project-title { color: var(--brass-dark); }
+.project-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--sage);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+  cursor: pointer;
+}
+.project-card:hover {
+  box-shadow: 0 6px 20px rgba(28,43,57,.12);
+  transform: translateY(-2px);
+}
+.project-card-header {
+  display: flex; gap: 14px;
+  padding: 16px 18px; align-items: flex-start;
+}
+.project-card-thumb {
+  width: 72px; height: 72px; flex-shrink: 0;
+  object-fit: cover; border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+.project-card-thumb-placeholder {
+  width: 72px; height: 72px; flex-shrink: 0;
+  background: rgba(95,113,97,.12);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+}
+.project-card-body { flex: 1; min-width: 0; }
+.project-card-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem; color: var(--muted); margin-bottom: 4px;
+}
+.project-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem; font-weight: 600;
+  color: var(--ink); margin-bottom: 6px;
+}
+.project-card-preview {
+  font-size: .87rem; color: var(--muted);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.project-card-footer {
+  padding: 10px 18px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px dashed var(--line); font-size: .82rem; flex-wrap: wrap; gap: 8px;
+}
+.project-read-btn {
+  color: var(--sage); font-weight: 600;
+  font-size: .85rem; display: flex; align-items: center; gap: 4px;
+}
+
+/* মডাল */
+.project-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(28,43,57,.65);
+  backdrop-filter: blur(4px);
+  z-index: 8000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: _tin .2s ease;
+}
+.project-modal {
+  background: var(--card);
+  border-radius: 12px;
+  width: 100%; max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.35);
+  animation: _tin .25s cubic-bezier(.34,1.56,.64,1);
+  -webkit-overflow-scrolling: touch;
+}
+.project-modal-hero {
+  width: 100%; max-height: 280px;
+  object-fit: cover; display: block;
+  border-radius: 12px 12px 0 0;
+}
+.project-modal-body { padding: 24px 26px 28px; }
+.project-modal-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .72rem; color: var(--muted); margin-bottom: 8px;
+}
+.project-modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--ink); margin-bottom: 16px; line-height: 1.35;
+}
+.project-modal-content {
+  font-family: 'Hind Siliguri', sans-serif;
+  font-size: .97rem; line-height: 1.85;
+  color: var(--text); white-space: pre-line;
+}
+.project-modal-actions {
+  display: flex; gap: 10px; margin-top: 20px;
+  padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap;
+}
+.project-modal-close {
+  position: sticky; top: 12px; float: right;
+  margin: 12px 12px 0 0;
+  background: rgba(28,43,57,.7); color: #fff;
+  border: none; border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); z-index: 1;
+}
 </style>
 </head>
 <body>
-
 <div id="navRoot"></div>
 
 <main class="wrap" style="max-width:760px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:22px;">
-    <div class="section-label" style="margin:0;">প্রকল্পসমূহ</div>
+  <div class="page-toolbar">
+    <div class="section-label">প্রকল্পসমূহ</div>
     <div id="refreshBtnRoot"></div>
   </div>
 
+  <!-- অ্যাডমিন ফর্ম -->
   <div id="adminBlock" class="admin-only-block" style="display:none;">
     <span class="admin-badge">নতুন প্রকল্প যোগ করুন</span>
     <label>শিরোনাম</label>
     <input id="pTitle" placeholder="প্রকল্পের নাম" />
     <label>বিবরণ</label>
-    <textarea id="pDescription" rows="4" style="resize:vertical;"></textarea>
+    <textarea id="pDescription" rows="5" style="resize:vertical;"></textarea>
     <label style="margin-top:14px;">ছবি (ঐচ্ছিক — গ্যালারিতেও যুক্ত হবে)</label>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
       <label class="btn outline" style="cursor:pointer;margin:0;">
@@ -45,110 +146,129 @@
     </div>
     <img id="pPhotoPreview" style="display:none;width:140px;height:100px;object-fit:cover;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;" />
     <button class="btn brass" style="margin-top:18px;" onclick="addProject()">যোগ করুন</button>
-    <div id="pMsg"></div>
   </div>
 
+  <!-- প্রকল্প তালিকা -->
   <div id="projectList"></div>
   <div class="empty-state" id="emptyState" style="display:none;">এখনো কোনো প্রকল্প যোগ করা হয়নি।</div>
 </main>
 
+<!-- প্রকল্প ডিটেইল মডাল -->
+<div id="projectModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
 
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script>
+renderNav('projects.html');
+renderRefreshBtn(loadProjects);
 
-// ===== স্মার্ট ছবি কম্প্রেস (ভালো রেজুলেশন, ছোট সাইজ) =====
+let allProjects = [];
+
+function onAdminStateChange() {
+  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+}
+
+// ===== প্রকল্প লোড =====
+async function loadProjects() {
+  allProjects = await Api.get('listProjects') || [];
+  const el    = document.getElementById('projectList');
+  const empty = document.getElementById('emptyState');
+  if (!allProjects.length) { el.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  el.innerHTML = allProjects.map(function(p) {
+    const thumb = p.ImageURL
+      ? '<img class="project-card-thumb" src="' + p.ImageURL + '" alt="" />'
+      : '<div class="project-card-thumb-placeholder">🏗️</div>';
+    const preview = (p.Description || '').replace(/<[^>]+>/g, '').slice(0, 120) +
+      ((p.Description || '').length > 120 ? '...' : '');
+    const adminBtns = isAdmin()
+      ? '<button class="btn small" style="background:var(--rust);" onclick="event.stopPropagation();removeProject(\'' + p.ID + '\')">ডিলিট</button>'
+      : '';
+    return '<div class="project-card" onclick="openProject(\'' + p.ID + '\')">' +
+      '<div class="project-card-header">' + thumb +
+        '<div class="project-card-body">' +
+          '<div class="project-card-date">' + fmtDate(p.Date) + '</div>' +
+          '<div class="project-card-title">' + p.Title + '</div>' +
+          '<div class="project-card-preview">' + (preview || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="project-card-footer">' +
+        '<span class="project-read-btn">📋 বিস্তারিত দেখুন →</span>' +
+        '<div onclick="event.stopPropagation();">' +
+          '<button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,\'🏗️ \'+this.dataset.t+\' — শহীদ আইয়ুব আলী পাঠাগার\')" data-t="' + p.Title.replace(/"/g, '&quot;') + '">🔗 শেয়ার</button>' +
+          ' ' + adminBtns +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ===== প্রকল্প মডাল =====
+function openProject(id) {
+  const p = allProjects.find(function(x) { return x.ID === id; });
+  if (!p) return;
+
+  const heroImg = p.ImageURL
+    ? '<img class="project-modal-hero" src="' + p.ImageURL + '" alt="' + p.Title + '" />'
+    : '';
+
+  document.getElementById('projectModalRoot').innerHTML =
+    '<div class="project-modal-backdrop" id="pBackdrop" onclick="closeProject(event)">' +
+      '<div class="project-modal">' +
+        '<button class="project-modal-close" onclick="closeProject()">✕</button>' +
+        heroImg +
+        '<div class="project-modal-body">' +
+          '<div class="project-modal-date">' + fmtDate(p.Date) + '</div>' +
+          '<div class="project-modal-title">' + p.Title + '</div>' +
+          '<div class="project-modal-content">' + (p.Description || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>') + '</div>' +
+          '<div class="project-modal-actions">' +
+            '<button class="btn outline" onclick="closeProject()">← ফিরে যান</button>' +
+            '<button class="btn outline" onclick="ShareUtil.show(\'' + p.Title.replace(/'/g, "\\'") + '\',\'🏗️ ' + p.Title.replace(/'/g, "\\'") + ' — শহীদ আইয়ুব আলী পাঠাগার\')">🔗 শেয়ার করুন</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', projectKeyHandler);
+}
+
+function closeProject(e) {
+  if (e && e.target && e.target.id !== 'pBackdrop' && !e.target.classList.contains('project-modal-close')) return;
+  document.getElementById('projectModalRoot').innerHTML = '';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', projectKeyHandler);
+}
+
+function projectKeyHandler(e) {
+  if (e.key === 'Escape') closeProject({ target: { id: 'pBackdrop' } });
+}
+
+// ===== প্রকল্প যোগ =====
 function compressImage(file, callback) {
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     const img = new Image();
-    img.onload = () => {
-      // মোবাইল ক্যামেরার ছবি সাধারণত ৩-১২ মেগাপিক্সেল
-      // ১৬০০px max width রাখলে রেজুলেশন ভালো থাকে, সাইজ ছোট হয়
+    img.onload = function() {
       const MAX_W = 1600, MAX_H = 1200;
       let w = img.naturalWidth, h = img.naturalHeight;
-      
-      // ঘোরানো ছবির জন্য exif orientation ঠিক করা (iOS)
       if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
       if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
-      
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, w, h);
-      
-      // ছবির আসল সাইজ অনুযায়ী quality নির্ধারণ
-      // বড় ছবি → একটু কম quality (তবু ভালো দেখায়)
-      // ছোট ছবি → বেশি quality
-      const megapixels = (w * h) / 1_000_000;
-      const quality = megapixels > 2 ? 0.78 : 0.88;
-      
-      const dataUrl = canvas.toDataURL('image/jpeg', quality);
-      
-      // আনুমানিক সাইজ চেক (base64 → bytes)
-      const approxKB = Math.round(dataUrl.length * 0.75 / 1024);
-      console.log(`ছবি compress: ${img.naturalWidth}×${img.naturalHeight} → ${w}×${h}, ~${approxKB}KB`);
-      
-      callback(dataUrl);
+      const mp = (w * h) / 1000000;
+      callback(canvas.toDataURL('image/jpeg', mp > 2 ? 0.78 : 0.88));
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
-}
-renderNav('projects.html');
-renderRefreshBtn(loadProjects);
-
-function onAdminStateChange() {
-  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
-  loadProjects();
-}
-
-function toggleProject(id) {
-  const body = document.getElementById('pb-' + id);
-  const icon = document.getElementById('pi-' + id);
-  const open = body.classList.toggle('open');
-  icon.textContent = open ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন';
-}
-
-async function loadProjects() {
-  const projects = await Api.get('listProjects');
-  const el = document.getElementById('projectList');
-  const empty = document.getElementById('emptyState');
-  if (!projects || projects.length === 0) {
-    el.innerHTML = ''; empty.style.display = 'block'; return;
-  }
-  empty.style.display = 'none';
-
-  el.innerHTML = projects.map((p, idx) => {
-    const isFeatured = idx === 0;
-    const adminBtn = isAdmin()
-      ? `<button class="btn small" style="background:var(--rust); margin-top:12px;" onclick="event.stopPropagation(); removeProject('${p.ID}')">ডিলিট</button>`
-      : '';
-    return `
-      <div class="project-item ${isFeatured ? 'featured' : ''}">
-        <div class="project-header" onclick="toggleProject('${p.ID}')">
-          <div class="project-title-block">
-            <div class="project-date">${fmtDate(p.Date)}</div>
-            <div class="project-title">${p.Title}</div>
-          </div>
-          <span class="project-toggle" id="pi-${p.ID}">${isFeatured ? '▲ সংক্ষিপ্ত করুন' : '▼ বিস্তারিত দেখুন'}</span>
-        </div>
-        <div class="project-body ${isFeatured ? 'open' : ''}" id="pb-${p.ID}">
-          <div class="project-body-inner">
-            ${p.ImageURL ? `<img src="${p.ImageURL}" style="width:100%;max-height:280px;object-fit:cover;border-radius:var(--radius);margin-bottom:12px;" />` : ''}
-            ${p.Description || '<span style="color:var(--muted);">বিবরণ যোগ করা হয়নি।</span>'}
-            <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-              ${adminBtn}
-              <button class="btn small outline" onclick="ShareUtil.show(this.dataset.t, '🏗️ '+this.dataset.t+' — শহীদ আইয়ুব আলী পাঠাগার')" data-t="${p.Title.replace(/"/g,'&quot;')}">🔗 শেয়ার</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
 }
 
 let _projectPhotoDataUrl = '';
@@ -156,11 +276,10 @@ function handleProjectPhoto(evt) {
   const file = evt.target.files[0];
   if (!file) return;
   document.getElementById('pPhotoName').textContent = file.name;
-  compressImage(file, dataUrl => {
+  compressImage(file, function(dataUrl) {
     _projectPhotoDataUrl = dataUrl;
     const prev = document.getElementById('pPhotoPreview');
-    prev.src = dataUrl;
-    prev.style.display = 'block';
+    prev.src = dataUrl; prev.style.display = 'block';
   });
 }
 
@@ -187,10 +306,12 @@ async function addProject() {
 async function removeProject(id) {
   if (!await Dialog.confirm('প্রকল্পটি মুছে ফেলতে চান?')) return;
   await Api.post('deleteProject', { id });
+  Toast.success('প্রকল্প মুছে ফেলা হয়েছে।');
   loadProjects();
 }
 
 onAdminStateChange();
+loadProjects();
 </script>
 </body>
 </html>
