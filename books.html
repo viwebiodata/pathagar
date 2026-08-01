@@ -154,7 +154,7 @@ function switchTab(name) {
 
 // ---------- অ্যাডমিন ----------
 function onAdminStateChange() {
-  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('adminBlock').style.display = (isAdmin() || Can.editBooks()) ? 'block' : 'none';
   renderBooks(allBooks);
 }
 
@@ -333,7 +333,7 @@ function bookCard(b) {
   const copyBadge = total > 1
     ? `<span style="font-size:0.74rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;">${available}/${total} কপি</span>`
     : '';
-  const adminBtns = isAdmin() ? `
+  const adminBtns = (isAdmin() || Can.editBooks()) ? `
     <div class="row-actions" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
       <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
       <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
