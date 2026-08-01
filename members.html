@@ -88,7 +88,7 @@ function renderMembers() {
     const typeTag = position
       ? `<span class="tag role">${position}</span>`
       : `<span class="tag available">সাধারণ সদস্য</span>`;
-    const actions = adminOn ? `
+    const actions = (isAdmin() || Can.editMembers()) ? `
       <button class="btn small outline" onclick="openEdit('${m.ID}')">এডিট</button>
       <button class="btn small" style="background:var(--rust);" onclick="removeMember('${m.ID}')">ডিলিট</button>
     ` : '';
