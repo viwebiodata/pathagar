@@ -167,7 +167,7 @@ renderRefreshBtn(loadProjects);
 let allProjects = [];
 
 function onAdminStateChange() {
-  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('adminBlock').style.display = (isAdmin() || Can.editProjects()) ? 'block' : 'none';
 }
 
 // ===== প্রকল্প লোড =====
