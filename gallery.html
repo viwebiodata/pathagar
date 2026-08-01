@@ -248,7 +248,7 @@ let currentLbIndex = 0;
 
 // ===== অ্যাডমিন =====
 function onAdminStateChange() {
-  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('adminBlock').style.display = (isAdmin() || Can.editGallery()) ? 'block' : 'none';
 }
 
 // ===== ছবি প্রিভিউ (একাধিক) =====
