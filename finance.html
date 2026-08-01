@@ -27,7 +27,7 @@
     <div class="panel">
       <h3 style="margin-bottom:10px;">🔒 অ্যাডমিন লগইন প্রয়োজন</h3>
       <p style="color:var(--muted); font-size:0.9rem; margin-bottom:16px;">আয়-ব্যয়ের হিসাব শুধু অ্যাডমিনের জন্য।</p>
-      <button class="btn brass" onclick="openAdminLogin()">অ্যাডমিন লগইন</button>
+      <button class="btn brass" onclick="openLoginModal()">অ্যাডমিন লগইন</button>
     </div>
   </div>
 
@@ -156,7 +156,7 @@ document.getElementById('todayDisplay').textContent = fmtDate(new Date());
 let allExpenses = [];
 
 function onAdminStateChange() {
-  const on = isAdmin();
+  const on = isAdmin() || Can.viewFinance();
   document.getElementById('loginPrompt').style.display   = on ? 'none'  : 'block';
   document.getElementById('mainContent').style.display   = on ? 'block' : 'none';
   if (on) loadAll();
