@@ -174,7 +174,7 @@ renderRefreshBtn(loadNotices);
 let allNotices = [];
 
 function onAdminStateChange() {
-  document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('adminBlock').style.display = (isAdmin() || Can.editNotices()) ? 'block' : 'none';
 }
 
 // ===== নোটিশ লোড =====
