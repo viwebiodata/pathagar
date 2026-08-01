@@ -117,6 +117,83 @@ a { color: inherit; text-decoration: none; }
 .nav-link.active::after { left: 10px; right: 10px; background: var(--brass); height: 2px; }
 .nav-link.admin-tag { color: var(--brass); opacity: 1; }
 
+/* ═══════════════════════════════════════════
+   NAV DROPDOWN (বই ▾ / সদস্য ▾ / অ্যাডমিন ▾ সাব-মেনু)
+═══════════════════════════════════════════ */
+.nav-dd { position: relative; }
+
+.nav-dd-btn {
+  background: none;
+  border: none;
+  color: var(--paper);
+  font-family: 'Hind Siliguri', sans-serif;
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  opacity: 0.78;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+  position: relative;
+}
+.nav-dd-btn:hover { opacity: 1; }
+.nav-dd.active-parent .nav-dd-btn { opacity: 1; }
+.nav-dd.active-parent .nav-dd-btn::after {
+  content: '';
+  position: absolute; bottom: 2px; left: 10px; right: 10px;
+  height: 2px; background: var(--brass);
+}
+
+.nav-dd-arrow {
+  font-size: 0.68rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.nav-dd.open .nav-dd-arrow { transform: rotate(180deg); }
+
+.nav-dd-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 180px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--brass);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  padding: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 210;
+}
+.nav-dd.open .nav-dd-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nav-dd-item {
+  display: block;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  border-radius: 3px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-dd-item:hover {
+  background: rgba(169,121,60,0.1);
+  color: var(--brass-dark);
+}
+.nav-dd-item.active {
+  background: rgba(169,121,60,0.14);
+  color: var(--brass-dark);
+  font-weight: 600;
+}
+
 /* হ্যামবার্গার */
 .hamburger {
   display: none; flex-direction: column; justify-content: center; gap: 5px;
