@@ -239,12 +239,57 @@ document.addEventListener('click', e => {
 });
 
 // ============================================================
-//  ADMIN SESSION
+//  SESSION SYSTEM  (Admin + Role-based Users)
 // ============================================================
+
+// ---- Admin ----
 function isAdmin() { return sessionStorage.getItem('isAdmin') === 'yes'; }
 function setAdmin(on) {
   if (on) sessionStorage.setItem('isAdmin', 'yes');
   else sessionStorage.removeItem('isAdmin');
+}
+
+// ---- User session ----
+function getUser() {
+  try { return JSON.parse(sessionStorage.getItem('_pathUser') || 'null'); }
+  catch(e) { return null; }
+}
+function setUser(u) {
+  if (u) sessionStorage.setItem('_pathUser', JSON.stringify(u));
+  else sessionStorage.removeItem('_pathUser');
+}
+function isLoggedIn() { return isAdmin() || !!getUser(); }
+
+// পারমিশন চেক
+function hasPerm(perm) {
+  if (isAdmin()) return true;
+  const u = getUser();
+  if (!u) return false;
+  return Array.isArray(u.permissions) && u.permissions.includes(perm);
+}
+
+// শর্টকাট চেকার
+const Can = {
+  viewBooks:    () => hasPerm('books_view'),
+  editBooks:    () => hasPerm('books_edit'),
+  viewBooking:  () => hasPerm('booking_view'),
+  editBooking:  () => hasPerm('booking_edit'),
+  viewMembers:  () => hasPerm('members_view'),
+  editMembers:  () => hasPerm('members_edit'),
+  viewFinance:  () => hasPerm('finance_view'),
+  editFinance:  () => hasPerm('finance_edit'),
+  editNotices:  () => isAdmin() || hasPerm('notices_edit'),
+  editProjects: () => isAdmin() || hasPerm('projects_edit'),
+  editGallery:  () => isAdmin() || hasPerm('gallery_edit'),
+  viewReports:  () => hasPerm('reports_view'),
+};
+
+// লগআউট (সব session মুছা)
+function fullLogout() {
+  setAdmin(false);
+  setUser(null);
+  renderAdminSlot();
+  if (typeof onAdminStateChange === 'function') onAdminStateChange();
 }
 
 function fmtDate(d) {
@@ -276,41 +321,109 @@ function renderRefreshBtn(onRefresh) {
 }
 
 // ============================================================
-//  NAVIGATION (hamburger menu)
+//  NAVIGATION (dropdown submenus + hamburger)
 // ============================================================
 function renderNav(active) {
-  const items = [
+  const loggedIn  = isAdmin() || !!getUser();
+  const adminUser = isAdmin();
+
+  // ডেস্কটপ সাব-মেনু হেল্পার
+  function drop(label, items, activeHref) {
+    const isActive = items.some(([href]) => href === activeHref);
+    const lis = items.map(([href, lbl]) =>
+      `<a class="nav-dd-item ${href === activeHref ? 'active' : ''}" href="${href}" onclick="closeMenu()">${lbl}</a>`
+    ).join('');
+    return `<div class="nav-dd ${isActive ? 'active-parent' : ''}">
+      <button class="nav-dd-btn">${label} <span class="nav-dd-arrow">▾</span></button>
+      <div class="nav-dd-panel">${lis}</div>
+    </div>`;
+  }
+
+  // ডেস্কটপ নেভ
+  let desktopLinks = `
+    <a class="nav-link ${active==='index.html'?'active':''}" href="index.html">হোম</a>
+    ${drop('বই ▾', [['books.html','বই তালিকা'],['booking.html','বই বুকিং']], active)}
+    ${drop('সদস্য ▾', [
+      ['members.html','সদস্য তালিকা'],
+      ['committee.html','কমিটি তালিকা'],
+      ['register.html','নতুন সদস্য হোন'],
+    ], active)}
+    <a class="nav-link ${active==='gallery.html'?'active':''}" href="gallery.html">গ্যালারি</a>
+    <a class="nav-link ${active==='notices.html'?'active':''}" href="notices.html">নোটিশ</a>
+    <a class="nav-link ${active==='projects.html'?'active':''}" href="projects.html">কার্যক্রম</a>
+    <a class="nav-link ${active==='donations.html'?'active':''}" href="donations.html">অনুদান</a>
+    <a class="nav-link ${active==='contact.html'?'active':''}" href="contact.html">যোগাযোগ</a>
+  `;
+
+  // মোবাইল ড্রয়ার লিংক (flat list)
+  const drawerLinks = [
     ['index.html',    'হোম'],
-    ['books.html',    'বই তালিকা'],
-    ['booking.html',  'বই বুকিং'],
-    ['members.html',  'সদস্য তালিকা'],
-    ['committee.html','কমিটি'],
-    ['register.html', 'নতুন সদস্য হোন'],
-    ['notices.html',  'নোটিশ'],
-    ['projects.html', 'প্রকল্প'],
-    ['donations.html','অনুদান'],
-    ['finance.html',  'আয়-ব্যয়'],
+    ['books.html',    '📚 বই তালিকা'],
+    ['booking.html',  '🔖 বই বুকিং'],
+    ['members.html',  '🧑 সদস্য তালিকা'],
+    ['committee.html','🏛️ কমিটি তালিকা'],
+    ['register.html', '✍️ নতুন সদস্য হোন'],
     ['gallery.html',  '📷 গ্যালারি'],
+    ['notices.html',  '📢 নোটিশ'],
+    ['projects.html', '🏗️ কার্যক্রম'],
+    ['donations.html','💛 অনুদান'],
+    ['contact.html',  '📞 যোগাযোগ'],
   ];
 
-  const links = items.map(([href, label]) =>
-    `<a class="nav-link ${active === href ? 'active' : ''}" href="${href}" onclick="closeMenu()">${label}</a>`
+  // অ্যাডমিন-অনলি আইটেম
+  if (adminUser) {
+    drawerLinks.push(
+      ['finance.html',  '💰 আয়-ব্যয়'],
+      ['message.html',  '✉️ বার্তা'],
+      ['admin.html',    '⚙️ অ্যাডমিন প্যানেল'],
+    );
+    desktopLinks += `
+      ${drop('অ্যাডমিন ▾', [
+        ['finance.html','💰 আয়-ব্যয়'],
+        ['message.html','✉️ বার্তা'],
+        ['admin.html','⚙️ প্যানেল'],
+      ], active)}
+    `;
+  } else if (loggedIn && Can.viewFinance()) {
+    drawerLinks.push(['finance.html', '💰 আয়-ব্যয়']);
+    desktopLinks += `<a class="nav-link ${active==='finance.html'?'active':''}" href="finance.html">আয়-ব্যয়</a>`;
+  }
+
+  const drawerHtml = drawerLinks.map(([href, lbl]) =>
+    `<a class="nav-link ${active===href?'active':''}" href="${href}" onclick="closeMenu()">${lbl}</a>`
   ).join('');
 
   document.getElementById('navRoot').innerHTML = `
     <nav class="nav">
       <a href="index.html" class="brand"><span class="tab"></span>শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</a>
-      <div class="nav-desktop">${links}<span id="adminSlot"></span></div>
+      <div class="nav-desktop">${desktopLinks}<span id="adminSlot"></span></div>
       <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="মেনু">
         <span></span><span></span><span></span>
       </button>
     </nav>
     <div class="nav-drawer" id="navDrawer">
-      <div class="nav-drawer-inner">${links}<span id="adminSlotMobile"></span></div>
+      <div class="nav-drawer-inner">${drawerHtml}<span id="adminSlotMobile"></span></div>
     </div>
     <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
   `;
   renderAdminSlot();
+  initDropdowns();
+}
+
+// ড্রপডাউন init
+function initDropdowns() {
+  document.querySelectorAll('.nav-dd').forEach(dd => {
+    const btn = dd.querySelector('.nav-dd-btn');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      // অন্য সব বন্ধ করো
+      document.querySelectorAll('.nav-dd.open').forEach(o => { if (o !== dd) o.classList.remove('open'); });
+      dd.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-dd.open').forEach(o => o.classList.remove('open'));
+  });
 }
 
 function toggleMenu() {
@@ -327,9 +440,17 @@ function closeMenu() {
 }
 
 function renderAdminSlot() {
-  const html = isAdmin()
-    ? `<a class="nav-link admin-tag" href="#" onclick="doAdminLogout();return false;">অ্যাডমিন ● লগআউট</a>`
-    : `<a class="nav-link" href="#" onclick="openAdminLogin();return false;">অ্যাডমিন লগইন</a>`;
+  let html;
+  if (isAdmin()) {
+    html = `<a class="nav-link admin-tag" href="#" onclick="doAdminLogout();return false;">অ্যাডমিন ● লগআউট</a>
+            <a class="nav-link" href="admin.html" style="color:var(--brass);font-size:.8rem;">⚙ প্যানেল</a>`;
+  } else if (getUser()) {
+    const u = getUser();
+    html = `<span class="nav-link" style="color:#9ecfb0;font-size:.82rem;">👤 ${u.name}</span>
+            <a class="nav-link" href="#" onclick="fullLogout();return false;" style="font-size:.8rem;opacity:.7;">লগআউট</a>`;
+  } else {
+    html = `<a class="nav-link" href="#" onclick="openLoginModal();return false;">🔑 লগইন</a>`;
+  }
   ['adminSlot','adminSlotMobile'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
@@ -337,30 +458,168 @@ function renderAdminSlot() {
 }
 
 // ============================================================
-//  ADMIN LOGIN MODAL
+//  USER LOGIN MODAL (সদস্য লগইন)
 // ============================================================
-function openAdminLogin() {
+function openLoginModal() {
   document.getElementById('adminModalRoot').innerHTML = `
-    <div class="modal-backdrop" onclick="closeAdminLogin(event)">
-      <div class="modal" onclick="event.stopPropagation()">
-        <h3 style="margin-bottom:16px;">🔐 অ্যাডমিন লগইন</h3>
-        <label>ইউজারনেম</label>
-        <input id="adminUser" type="text" placeholder="admin" autocomplete="username" />
-        <label>পাসওয়ার্ড</label>
-        <input id="adminPass" type="password" placeholder="••••••" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter') submitAdminLogin()" />
-        <div style="display:flex;gap:10px;margin-top:22px;">
-          <button class="btn brass" style="flex:1;" onclick="submitAdminLogin()">লগইন করুন</button>
-          <button class="btn outline" onclick="closeAdminLogin()">বাতিল</button>
+    <div class="modal-backdrop" onclick="closeLoginModal(event)">
+      <div class="modal" onclick="event.stopPropagation()" style="max-width:360px;">
+        <h3 style="margin-bottom:6px;">🔑 লগইন</h3>
+        <p style="font-size:.83rem;color:var(--muted);margin-bottom:16px;">সদস্য লগইন বা অ্যাডমিন লগইন</p>
+        <div style="display:flex;gap:0;border:1px solid var(--line);border-radius:6px;margin-bottom:18px;overflow:hidden;">
+          <button id="tabUser"  onclick="switchLoginTab('user')"  style="flex:1;padding:9px;border:none;background:var(--ink);color:#fff;cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:.88rem;">সদস্য লগইন</button>
+          <button id="tabAdmin" onclick="switchLoginTab('admin')" style="flex:1;padding:9px;border:none;background:var(--card);color:var(--muted);cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:.88rem;">অ্যাডমিন</button>
         </div>
+
+        <div id="userLoginPane">
+          <label>ফোন নম্বর</label>
+          <input id="ulPhone" type="tel" placeholder="01XXXXXXXXX" />
+          <label>পাসওয়ার্ড</label>
+          <input id="ulPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitUserLogin()" />
+          <button class="btn brass" style="margin-top:18px;width:100%;" onclick="submitUserLogin()">লগইন করুন</button>
+        </div>
+
+        <div id="adminLoginPane" style="display:none;">
+          <label>ইউজারনেম</label>
+          <input id="adminUser" type="text" placeholder="admin" autocomplete="username" />
+          <label>পাসওয়ার্ড</label>
+          <input id="adminPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitAdminLogin()" />
+          <button class="btn brass" style="margin-top:18px;width:100%;" onclick="submitAdminLogin()">অ্যাডমিন লগইন</button>
+        </div>
+        <button class="btn outline" style="margin-top:10px;width:100%;" onclick="closeLoginModal()">বাতিল</button>
       </div>
     </div>`;
-  setTimeout(() => document.getElementById('adminUser')?.focus(), 80);
+  setTimeout(() => document.getElementById('ulPhone')?.focus(), 80);
 }
-function closeAdminLogin(e) {
+
+function switchLoginTab(tab) {
+  const isUser = tab === 'user';
+  document.getElementById('userLoginPane').style.display  = isUser ? 'block' : 'none';
+  document.getElementById('adminLoginPane').style.display = isUser ? 'none'  : 'block';
+  document.getElementById('tabUser').style.background  = isUser ? 'var(--ink)'  : 'var(--card)';
+  document.getElementById('tabUser').style.color       = isUser ? '#fff'         : 'var(--muted)';
+  document.getElementById('tabAdmin').style.background = isUser ? 'var(--card)' : 'var(--ink)';
+  document.getElementById('tabAdmin').style.color      = isUser ? 'var(--muted)': '#fff';
+}
+
+function closeLoginModal(e) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById('adminModalRoot').innerHTML = '';
 }
+
+async function submitUserLogin() {
+  const phone    = document.getElementById('ulPhone').value.trim();
+  const password = document.getElementById('ulPass').value;
+  if (!phone || !password) { Toast.warning('ফোন নম্বর ও পাসওয়ার্ড দিন'); return; }
+  Toast.loading('লগইন হচ্ছে...');
+  const res = await Api.post('userLogin', { phone, password });
+  if (res.error) { Toast.error(res.error); return; }
+  setUser(res.user);
+  Toast.success('স্বাগতম, ' + res.user.name + '!');
+  document.getElementById('adminModalRoot').innerHTML = '';
+  // nav পুনরায় রেন্ডার করতে হবে (finance দেখানোর জন্য)
+  if (typeof renderNav === 'function') {
+    const active = document.querySelector('.nav-link.active')?.getAttribute('href') || 'index.html';
+    renderNav(active);
+  }
+  if (typeof onAdminStateChange === 'function') onAdminStateChange();
+}
+
+// পুরনো openAdminLogin ফাংশন — এখন loginModal এর admin tab হিসেবে কাজ করবে
+function openAdminLogin() { openLoginModal(); switchLoginTab('admin'); }
+
+// ============================================================
+//  UNIFIED LOGIN MODAL (Admin + User দুই ট্যাব)
+// ============================================================
+function openLoginModal() {
+  document.getElementById('adminModalRoot').innerHTML = `
+    <div class="modal-backdrop" onclick="closeLoginModal(event)">
+      <div class="modal" style="max-width:380px;" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom:14px;">🔑 লগইন</h3>
+
+        <!-- ট্যাব -->
+        <div style="display:flex;border-bottom:2px solid var(--line);margin-bottom:18px;">
+          <button id="tabUser"  onclick="switchLoginTab('user')"
+            style="flex:1;padding:8px;border:none;background:none;cursor:pointer;
+            font-family:'Hind Siliguri',sans-serif;font-size:.9rem;color:var(--muted);
+            border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;">
+            👤 ব্যবহারকারী</button>
+          <button id="tabAdmin" onclick="switchLoginTab('admin')"
+            style="flex:1;padding:8px;border:none;background:none;cursor:pointer;
+            font-family:'Hind Siliguri',sans-serif;font-size:.9rem;color:var(--muted);
+            border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;">
+            ⚙️ অ্যাডমিন</button>
+        </div>
+
+        <!-- User Tab -->
+        <div id="loginPaneUser">
+          <label>ফোন নম্বর</label>
+          <input id="uLoginPhone" type="tel" placeholder="01XXXXXXXXX" />
+          <label>পাসওয়ার্ড</label>
+          <input id="uLoginPass" type="password" placeholder="••••••"
+            onkeydown="if(event.key==='Enter') submitUserLogin()" />
+          <button class="btn brass" style="width:100%;margin-top:18px;" onclick="submitUserLogin()">লগইন করুন</button>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="loginPaneAdmin" style="display:none;">
+          <label>ইউজারনেম</label>
+          <input id="adminUser" type="text" placeholder="admin" autocomplete="username" />
+          <label>পাসওয়ার্ড</label>
+          <input id="adminPass" type="password" placeholder="••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') submitAdminLogin()" />
+          <button class="btn brass" style="width:100%;margin-top:18px;" onclick="submitAdminLogin()">লগইন করুন</button>
+        </div>
+
+        <button class="btn outline" style="width:100%;margin-top:10px;" onclick="closeLoginModal()">বাতিল</button>
+      </div>
+    </div>`;
+  switchLoginTab('user');
+  setTimeout(() => document.getElementById('uLoginPhone')?.focus(), 80);
+}
+
+function switchLoginTab(tab) {
+  const isUser = tab === 'user';
+  document.getElementById('loginPaneUser').style.display  = isUser ? 'block' : 'none';
+  document.getElementById('loginPaneAdmin').style.display = isUser ? 'none'  : 'block';
+  const tU = document.getElementById('tabUser');
+  const tA = document.getElementById('tabAdmin');
+  if (tU && tA) {
+    tU.style.color = isUser ? 'var(--brass-dark)' : 'var(--muted)';
+    tU.style.borderBottomColor = isUser ? 'var(--brass)' : 'transparent';
+    tU.style.fontWeight = isUser ? '600' : 'normal';
+    tA.style.color = !isUser ? 'var(--brass-dark)' : 'var(--muted)';
+    tA.style.borderBottomColor = !isUser ? 'var(--brass)' : 'transparent';
+    tA.style.fontWeight = !isUser ? '600' : 'normal';
+  }
+  setTimeout(() => {
+    const el = isUser ? document.getElementById('uLoginPhone') : document.getElementById('adminUser');
+    el?.focus();
+  }, 60);
+}
+
+function closeLoginModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('adminModalRoot').innerHTML = '';
+}
+
+async function submitUserLogin() {
+  const phone    = document.getElementById('uLoginPhone')?.value.trim();
+  const password = document.getElementById('uLoginPass')?.value;
+  if (!phone || !password) { Toast.warning('ফোন নম্বর ও পাসওয়ার্ড দিন'); return; }
+  Toast.loading('লগইন হচ্ছে...');
+  const res = await Api.post('userLogin', { phone, password });
+  if (res.error) { Toast.error(res.error); return; }
+  setUser(res.user);
+  closeLoginModal();
+  Toast.success('স্বাগতম, ' + res.user.name + '! (' + res.user.role + ')');
+  // nav পুনরায় রেন্ডার (finance দেখানোর জন্য)
+  const active = document.querySelector('.nav-link.active')?.getAttribute('href') || 'index.html';
+  renderNav(active);
+  renderAdminSlot();
+  if (typeof onAdminStateChange === 'function') onAdminStateChange();
+}
+
 async function submitAdminLogin() {
   const username = document.getElementById('adminUser').value.trim();
   const password = document.getElementById('adminPass').value;
@@ -369,8 +628,10 @@ async function submitAdminLogin() {
   const res = await Api.post('adminLogin', { username, password });
   if (res.error) { Toast.error(res.error); return; }
   Toast.success('অ্যাডমিন লগইন সফল হয়েছে।');
-  document.getElementById('adminModalRoot').innerHTML = '';
+  closeLoginModal();
   setAdmin(true);
+  const active = document.querySelector('.nav-link.active')?.getAttribute('href') || 'index.html';
+  renderNav(active);
   renderAdminSlot();
   if (typeof onAdminStateChange === 'function') onAdminStateChange();
 }
