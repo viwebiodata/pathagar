@@ -410,17 +410,35 @@ function renderNav(active) {
   initDropdowns();
 }
 
-// ড্রপডাউন init
+// ============================================================
+//  ড্রপডাউন init — ডেস্কটপে hover, মোবাইলে click/tap
+// ============================================================
 function initDropdowns() {
+  const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
   document.querySelectorAll('.nav-dd').forEach(dd => {
     const btn = dd.querySelector('.nav-dd-btn');
+
+    if (supportsHover) {
+      let closeTimer;
+      dd.addEventListener('mouseenter', () => {
+        clearTimeout(closeTimer);
+        document.querySelectorAll('.nav-dd.open').forEach(o => { if (o !== dd) o.classList.remove('open'); });
+        dd.classList.add('open');
+      });
+      dd.addEventListener('mouseleave', () => {
+        closeTimer = setTimeout(() => dd.classList.remove('open'), 150);
+      });
+    }
+
+    // ক্লিক — টাচ ডিভাইস / hover না থাকলে ফলব্যাক (এবং ডেস্কটপেও কাজ করবে)
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      // অন্য সব বন্ধ করো
       document.querySelectorAll('.nav-dd.open').forEach(o => { if (o !== dd) o.classList.remove('open'); });
       dd.classList.toggle('open');
     });
   });
+
   document.addEventListener('click', () => {
     document.querySelectorAll('.nav-dd.open').forEach(o => o.classList.remove('open'));
   });
@@ -456,77 +474,6 @@ function renderAdminSlot() {
     if (el) el.innerHTML = html;
   });
 }
-
-// ============================================================
-//  USER LOGIN MODAL (সদস্য লগইন)
-// ============================================================
-function openLoginModal() {
-  document.getElementById('adminModalRoot').innerHTML = `
-    <div class="modal-backdrop" onclick="closeLoginModal(event)">
-      <div class="modal" onclick="event.stopPropagation()" style="max-width:360px;">
-        <h3 style="margin-bottom:6px;">🔑 লগইন</h3>
-        <p style="font-size:.83rem;color:var(--muted);margin-bottom:16px;">সদস্য লগইন বা অ্যাডমিন লগইন</p>
-        <div style="display:flex;gap:0;border:1px solid var(--line);border-radius:6px;margin-bottom:18px;overflow:hidden;">
-          <button id="tabUser"  onclick="switchLoginTab('user')"  style="flex:1;padding:9px;border:none;background:var(--ink);color:#fff;cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:.88rem;">সদস্য লগইন</button>
-          <button id="tabAdmin" onclick="switchLoginTab('admin')" style="flex:1;padding:9px;border:none;background:var(--card);color:var(--muted);cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:.88rem;">অ্যাডমিন</button>
-        </div>
-
-        <div id="userLoginPane">
-          <label>ফোন নম্বর</label>
-          <input id="ulPhone" type="tel" placeholder="01XXXXXXXXX" />
-          <label>পাসওয়ার্ড</label>
-          <input id="ulPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitUserLogin()" />
-          <button class="btn brass" style="margin-top:18px;width:100%;" onclick="submitUserLogin()">লগইন করুন</button>
-        </div>
-
-        <div id="adminLoginPane" style="display:none;">
-          <label>ইউজারনেম</label>
-          <input id="adminUser" type="text" placeholder="admin" autocomplete="username" />
-          <label>পাসওয়ার্ড</label>
-          <input id="adminPass" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')submitAdminLogin()" />
-          <button class="btn brass" style="margin-top:18px;width:100%;" onclick="submitAdminLogin()">অ্যাডমিন লগইন</button>
-        </div>
-        <button class="btn outline" style="margin-top:10px;width:100%;" onclick="closeLoginModal()">বাতিল</button>
-      </div>
-    </div>`;
-  setTimeout(() => document.getElementById('ulPhone')?.focus(), 80);
-}
-
-function switchLoginTab(tab) {
-  const isUser = tab === 'user';
-  document.getElementById('userLoginPane').style.display  = isUser ? 'block' : 'none';
-  document.getElementById('adminLoginPane').style.display = isUser ? 'none'  : 'block';
-  document.getElementById('tabUser').style.background  = isUser ? 'var(--ink)'  : 'var(--card)';
-  document.getElementById('tabUser').style.color       = isUser ? '#fff'         : 'var(--muted)';
-  document.getElementById('tabAdmin').style.background = isUser ? 'var(--card)' : 'var(--ink)';
-  document.getElementById('tabAdmin').style.color      = isUser ? 'var(--muted)': '#fff';
-}
-
-function closeLoginModal(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('adminModalRoot').innerHTML = '';
-}
-
-async function submitUserLogin() {
-  const phone    = document.getElementById('ulPhone').value.trim();
-  const password = document.getElementById('ulPass').value;
-  if (!phone || !password) { Toast.warning('ফোন নম্বর ও পাসওয়ার্ড দিন'); return; }
-  Toast.loading('লগইন হচ্ছে...');
-  const res = await Api.post('userLogin', { phone, password });
-  if (res.error) { Toast.error(res.error); return; }
-  setUser(res.user);
-  Toast.success('স্বাগতম, ' + res.user.name + '!');
-  document.getElementById('adminModalRoot').innerHTML = '';
-  // nav পুনরায় রেন্ডার করতে হবে (finance দেখানোর জন্য)
-  if (typeof renderNav === 'function') {
-    const active = document.querySelector('.nav-link.active')?.getAttribute('href') || 'index.html';
-    renderNav(active);
-  }
-  if (typeof onAdminStateChange === 'function') onAdminStateChange();
-}
-
-// পুরনো openAdminLogin ফাংশন — এখন loginModal এর admin tab হিসেবে কাজ করবে
-function openAdminLogin() { openLoginModal(); switchLoginTab('admin'); }
 
 // ============================================================
 //  UNIFIED LOGIN MODAL (Admin + User দুই ট্যাব)
