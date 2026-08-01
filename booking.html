@@ -142,8 +142,8 @@ async function submitBooking() {
 }
 
 function onAdminStateChange() {
-  document.getElementById('bookingFormPanel').style.display = isAdmin() ? 'block' : 'none';
-  document.getElementById('bookingLoginPrompt').style.display = isAdmin() ? 'none' : 'block';
+  document.getElementById('bookingFormPanel').style.display = (isAdmin() || Can.editBooking()) ? 'block' : 'none';
+  document.getElementById('bookingLoginPrompt').style.display = (isAdmin() || Can.editBooking()) ? 'none' : 'block';
   loadBookings();
 }
 
@@ -206,7 +206,7 @@ async function loadBookings() {
       ? `<span class="mono" style="color:var(--rust); font-weight:600;">৳${b.Fine}</span>`
       : `<span class="mono" style="color:var(--muted);">—</span>`;
     let actions = '';
-    if (b.Status === 'active' && isAdmin()) {
+    if (b.Status === 'active' && (isAdmin() || Can.editBooking())) {
       actions += `<button class="btn small brass" onclick="markReturned('${b.ID}')">ফেরত দিন</button>`;
     }
     if (isAdmin()) {
