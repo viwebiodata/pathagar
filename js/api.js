@@ -28,122 +28,139 @@ const Api = {
 //    Toast.warning('বার্তা')   → হলুদ সতর্কতা
 // ============================================================
 const Toast = (() => {
+  let _loadingEl = null;
+  let _timer     = null;
+
+  // একটাই container — screen এর মাঝখানে উপরের দিকে
   function getWrap() {
     let w = document.getElementById('_toastWrap');
     if (!w) {
       w = document.createElement('div');
       w.id = '_toastWrap';
-      w.style.cssText = `
-        position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
-        z-index:9999; display:flex; flex-direction:column-reverse;
-        align-items:center; gap:10px; pointer-events:none; width:min(92vw,420px);
-      `;
+      w.style.cssText = [
+        'position:fixed',
+        'top:28px',
+        'left:50%',
+        'transform:translateX(-50%)',
+        'z-index:99999',
+        'display:flex',
+        'flex-direction:column',
+        'align-items:center',
+        'gap:10px',
+        'pointer-events:none',
+        'width:min(92vw,440px)',
+      ].join(';');
       document.body.appendChild(w);
     }
     return w;
   }
 
-  let _active = null;
+  function dismiss(el, delay) {
+    if (!el) return;
+    setTimeout(function() {
+      el.style.transition = 'opacity .35s ease, transform .35s ease';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateY(-12px) scale(.95)';
+      setTimeout(function() { if (el.parentNode) el.remove(); }, 360);
+    }, delay || 0);
+  }
 
-  function make(type, msg, icon, duration) {
-    if (_active && type === 'loading') {
-      _active.classList.add('_tout');
-      setTimeout(() => _active && _active.remove(), 350);
-      _active = null;
+  function clearLoading() {
+    if (_loadingEl) {
+      dismiss(_loadingEl, 0);
+      _loadingEl = null;
     }
+    if (_timer) { clearTimeout(_timer); _timer = null; }
+  }
+
+  function make(type, msg, duration) {
+    clearLoading();
 
     const colors = {
-      loading: { bg: 'linear-gradient(135deg,#1C2B39,#2a3f52)', color: '#F3EEE2', border: 'rgba(169,121,60,.5)' },
-      success: { bg: 'linear-gradient(135deg,#4a6e4c,#5F7161)', color: '#fff',    border: 'rgba(95,113,97,.6)' },
-      error:   { bg: 'linear-gradient(135deg,#8b3030,#9A3B3B)', color: '#fff',    border: 'rgba(154,59,59,.6)' },
-      warning: { bg: 'linear-gradient(135deg,#8a6230,#A9793C)', color: '#fff',    border: 'rgba(169,121,60,.6)' },
+      loading: { bg:'linear-gradient(135deg,#1C2B39,#2a3f52)', color:'#F3EEE2', border:'rgba(169,121,60,.5)' },
+      success: { bg:'linear-gradient(135deg,#4a6e4c,#5F7161)', color:'#fff',    border:'rgba(95,113,97,.6)'  },
+      error:   { bg:'linear-gradient(135deg,#8b3030,#9A3B3B)', color:'#fff',    border:'rgba(154,59,59,.6)'  },
+      warning: { bg:'linear-gradient(135deg,#8a6230,#A9793C)', color:'#fff',    border:'rgba(169,121,60,.6)' },
     };
-    const c = colors[type] || colors.loading;
+    const icons = { loading:'', success:'✓', error:'✕', warning:'⚠' };
+    const c2 = colors[type] || colors.loading;
 
     const el = document.createElement('div');
-    el.style.cssText = `
-      width:100%; padding:14px 18px; border-radius:10px;
-      background:${c.bg}; color:${c.color};
-      border:1px solid ${c.border};
-      box-shadow:0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.15);
-      font-family:'Hind Siliguri',sans-serif; font-size:.95rem; font-weight:600;
-      display:flex; align-items:center; gap:12px;
-      pointer-events:auto; cursor:default;
-      animation: _tin .35s cubic-bezier(.34,1.56,.64,1) both;
-    `;
+    el.style.cssText = [
+      'width:100%',
+      'padding:14px 18px',
+      'border-radius:10px',
+      'background:' + c2.bg,
+      'color:' + c2.color,
+      'border:1px solid ' + c2.border,
+      'box-shadow:0 8px 32px rgba(0,0,0,.28)',
+      'font-family:Hind Siliguri,sans-serif',
+      'font-size:.95rem',
+      'font-weight:600',
+      'display:flex',
+      'align-items:center',
+      'gap:12px',
+      'pointer-events:auto',
+      'opacity:0',
+      'transform:translateY(-10px) scale(.96)',
+      'transition:opacity .25s ease, transform .25s ease',
+    ].join(';');
 
+    // আইকন
     const iconEl = document.createElement('div');
-    iconEl.style.cssText = `
-      width:32px; height:32px; border-radius:50%; flex-shrink:0;
-      background:rgba(255,255,255,.15);
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.05rem;
-    `;
+    iconEl.style.cssText = 'width:30px;height:30px;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;';
 
     if (type === 'loading') {
-      iconEl.innerHTML = `<div style="
-        width:18px;height:18px;border-radius:50%;
-        border:2px solid rgba(255,255,255,.25);
-        border-top-color:#A9793C;
-        animation:_spin .7s linear infinite;
-      "></div>`;
+      iconEl.innerHTML = '<div style="width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#A9793C;animation:_spin .7s linear infinite;"></div>';
     } else {
-      iconEl.textContent = icon;
+      iconEl.textContent = icons[type];
     }
 
     const text = document.createElement('span');
-    text.textContent = msg;
     text.style.flex = '1';
+    text.textContent = msg;
 
-    const close = document.createElement('button');
-    close.textContent = '✕';
-    close.style.cssText = `
-      background:none;border:none;color:rgba(255,255,255,.6);
-      cursor:pointer;font-size:.85rem;padding:2px 4px;margin-left:4px;
-      font-family:sans-serif;
-    `;
-    close.onclick = () => dismiss(el);
+    // বন্ধ করার বাটন
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:.8rem;padding:2px 4px;';
+    closeBtn.onclick = function() { dismiss(el, 0); };
 
     el.appendChild(iconEl);
     el.appendChild(text);
-    el.appendChild(close);
+    el.appendChild(closeBtn);
     getWrap().appendChild(el);
 
+    // animate in
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        el.style.opacity   = '1';
+        el.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+
     if (type === 'loading') {
-      _active = el;
+      _loadingEl = el;
     } else {
-      _active = null;
-      setTimeout(() => dismiss(el), duration || 3000);
+      dismiss(el, duration || 3500);
     }
     return el;
   }
 
-  function dismiss(el) {
-    if (!el || !el.parentNode) return;
-    el.style.animation = '_tout .35s ease forwards';
-    setTimeout(() => el.remove(), 350);
-    if (_active === el) _active = null;
-  }
-
-  // CSS keyframes
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes _tin  { from{opacity:0;transform:translateY(20px) scale(.9)} to{opacity:1;transform:none} }
-    @keyframes _tout { from{opacity:1;transform:none} to{opacity:0;transform:translateY(-14px) scale(.92)} }
-    @keyframes _spin { to{transform:rotate(360deg)} }
-  `;
-  document.head.appendChild(style);
+  // keyframes inject (একবার)
+  const sty = document.createElement('style');
+  sty.textContent = '@keyframes _spin { to { transform:rotate(360deg); } }';
+  document.head.appendChild(sty);
 
   return {
-    loading: (msg = 'তথ্য জমা হচ্ছে... অপেক্ষা করুন।') => make('loading', msg, '⏳'),
-    success: (msg = 'সফলভাবে সম্পন্ন হয়েছে।')          => make('success', msg, '✓', 3000),
-    error:   (msg = 'একটি সমস্যা হয়েছে।')               => make('error',   msg, '✕', 4000),
-    warning: (msg = 'সতর্কতা!')                          => make('warning', msg, '⚠', 3500),
-    clear:   ()                                           => { if (_active) dismiss(_active); },
-
-    // পুরনো নামের সাথে সামঞ্জস্য (backward compat)
-    ok:  (msg) => make('success', msg, '✓', 3000),
-    err: (msg) => make('error',   msg, '✕', 4000),
+    loading: function(msg) { return make('loading', msg || 'অনুগ্রহ করে অপেক্ষা করুন...'); },
+    success: function(msg) { return make('success', msg || 'সফল হয়েছে।', 3000); },
+    error:   function(msg) { return make('error',   msg || 'সমস্যা হয়েছে।', 4000); },
+    warning: function(msg) { return make('warning', msg || 'সতর্কতা!', 3500); },
+    clear:   clearLoading,
+    // backward compat
+    ok:  function(msg) { return make('success', msg, 3000); },
+    err: function(msg) { return make('error',   msg, 4000); },
   };
 })();
 
