@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>বার্তা — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.msg-item{border-left:3px solid var(--brass);background:var(--card);margin-bottom:10px;border-radius:0 var(--radius) var(--radius) 0;overflow:hidden;}
+.msg-item.type-complaint{border-left-color:var(--rust);}
+.msg-item.status-replied{opacity:.75;}
+.msg-header{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:12px;}
+.msg-header:hover{background:rgba(169,121,60,.05);}
+.msg-meta{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:3px;display:flex;gap:8px;flex-wrap:wrap;}
+.msg-tag{padding:1px 8px;border-radius:100px;font-size:.68rem;font-weight:600;}
+.msg-tag.suggest{background:rgba(95,113,97,.12);color:var(--sage);}
+.msg-tag.complaint{background:rgba(196,112,90,.12);color:var(--rust);}
+.msg-tag.replied{background:rgba(0,0,0,.06);color:var(--muted);}
+.msg-title{font-weight:600;font-size:.95rem;color:var(--ink);}
+.msg-toggle{font-size:.78rem;color:var(--brass-dark);white-space:nowrap;flex-shrink:0;}
+.msg-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.msg-body.open{max-height:900px;}
+.msg-body-inner{padding:0 16px 16px;border-top:1px dashed var(--line);font-size:.93rem;line-height:1.75;}
+.msg-prev-reply{background:rgba(95,113,97,.06);border-left:3px solid var(--sage);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-top:10px;}
+.filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-pill{padding:7px 14px;border:1px solid var(--line);border-radius:100px;font-size:.85rem;cursor:pointer;color:var(--muted);transition:all .15s;}
+.filter-pill.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.stat-row .s{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px 16px;text-align:center;flex:1;min-width:90px;}
+.stat-row .s .n{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;color:var(--ink);}
+.stat-row .s .l{font-size:.7rem;color:var(--muted);}
+</style>
+</head>
+<body>
+<div id="navRoot"></div>
+<main class="wrap" style="max-width:820px;">
+  <div class="page-toolbar">
+    <div class="section-label">✉️ দর্শনার্থীদের বার্তা</div>
+    <div id="refreshBtnRoot"></div>
+  </div>
+  <div id="notAdminNotice" class="panel" style="text-align:center;display:none;">
+    <p style="color:var(--muted);margin-bottom:14px;">এই পাতাটি শুধুমাত্র অ্যাডমিনের জন্য।</p>
+    <button class="btn brass" onclick="openLoginModal();switchLoginTab('admin')">অ্যাডমিন লগইন</button>
+  </div>
+  <div id="adminArea" style="display:none;">
+    <div class="stat-row">
+      <div class="s"><div class="n" id="stTotal">—</div><div class="l">মোট</div></div>
+      <div class="s"><div class="n" id="stNew" style="color:var(--rust);">—</div><div class="l">উত্তর বাকি</div></div>
+      <div class="s"><div class="n" id="stSug" style="color:var(--sage);">—</div><div class="l">পরামর্শ</div></div>
+      <div class="s"><div class="n" id="stCom" style="color:var(--rust);">—</div><div class="l">অভিযোগ</div></div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-pill active" id="fAll"      onclick="setFilter('all')">সব</div>
+      <div class="filter-pill" id="fSug"             onclick="setFilter('পরামর্শ')">💡 পরামর্শ</div>
+      <div class="filter-pill" id="fCom"             onclick="setFilter('অভিযোগ')">⚠️ অভিযোগ</div>
+      <div class="filter-pill" id="fNew"             onclick="setFilter('unreplied')">উত্তর বাকি</div>
+    </div>
+    <div id="msgList"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">কোনো বার্তা নেই।</div>
+  </div>
+</main>
+<div id="adminModalRoot"></div>
+<div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+renderNav('message.html');
+renderRefreshBtn(loadMessages);
+var _msgs=[], _filter='all';
+
+function onAdminStateChange(){
+  var a=isAdmin();
+  document.getElementById('adminArea').style.display     =a?'block':'none';
+  document.getElementById('notAdminNotice').style.display=a?'none':'block';
+  if(a) loadMessages();
+}
+
+function setFilter(f){
+  _filter=f;
+  ['fAll','fSug','fCom','fNew'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  ({all:'fAll','পরামর্শ':'fSug','অভিযোগ':'fCom',unreplied:'fNew'})[f] &&
+    document.getElementById(({all:'fAll','পরামর্শ':'fSug','অভিযোগ':'fCom',unreplied:'fNew'})[f]).classList.add('active');
+  renderMessages();
+}
+
+function toggleMsg(id){
+  var b=document.getElementById('mb-'+id), ic=document.getElementById('mi-'+id);
+  var open=b.classList.toggle('open');
+  ic.textContent=open?'▲ সংক্ষিপ্ত':'▼ বিস্তারিত ও উত্তর দিন';
+}
+
+async function loadMessages(){
+  _msgs=await Api.get('listContactMessages')||[];
+  renderMessages();
+}
+
+function renderMessages(){
+  var list=_msgs.slice();
+  if(_filter==='unreplied') list=list.filter(function(m){return m.Status!=='Replied';});
+  else if(_filter!=='all')  list=list.filter(function(m){return m.Type===_filter;});
+
+  document.getElementById('stTotal').textContent=_msgs.length;
+  document.getElementById('stNew').textContent=_msgs.filter(function(m){return m.Status!=='Replied';}).length;
+  document.getElementById('stSug').textContent=_msgs.filter(function(m){return m.Type==='পরামর্শ';}).length;
+  document.getElementById('stCom').textContent=_msgs.filter(function(m){return m.Type==='অভিযোগ';}).length;
+
+  var el=document.getElementById('msgList'), empty=document.getElementById('emptyState');
+  if(!list.length){el.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  el.innerHTML=list.map(function(m){
+    var tc=m.Type==='অভিযোগ'?'complaint':'suggest';
+    var rep=m.Status==='Replied';
+    var prev=m.ReplyText?'<div class="msg-prev-reply"><strong>পাঠানো উত্তর ('+fmtDate(m.RepliedAt)+'):</strong><br>'+m.ReplyText+'</div>':'';
+    var hasEmail=!!m.Email;
+    return '<div class="msg-item type-'+tc+(rep?' status-replied':'')+'">'+
+      '<div class="msg-header" onclick="toggleMsg(\''+m.ID+'\')">'+
+        '<div><div class="msg-meta"><span>'+fmtDate(m.Date)+'</span>'+
+          '<span class="msg-tag '+tc+'">'+(m.Type==='অভিযোগ'?'⚠️ অভিযোগ':'💡 পরামর্শ')+'</span>'+
+          (rep?'<span class="msg-tag replied">✓ উত্তর দেওয়া হয়েছে</span>':'')+
+        '</div><div class="msg-title">'+(m.Name?m.Name+' — ':'')+(m.Phone||'')+'</div></div>'+
+        '<span class="msg-toggle" id="mi-'+m.ID+'">▼ বিস্তারিত ও উত্তর দিন</span>'+
+      '</div>'+
+      '<div class="msg-body" id="mb-'+m.ID+'"><div class="msg-body-inner">'+
+        '<p><strong>ফোন:</strong> '+(m.Phone||'—')+' &nbsp; <strong>ইমেইল:</strong> '+(m.Email||'— (দেওয়া হয়নি)')+'</p>'+
+        '<p>'+m.Message+'</p>'+prev+
+        '<div style="margin-top:12px;">'+
+          '<textarea id="reply-'+m.ID+'" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--radius);font-family:\'Hind Siliguri\',sans-serif;resize:vertical;" '+
+            'placeholder="'+(hasEmail?'উত্তর লিখুন — ইমেইলে পাঠানো হবে':'ইমেইল দেওয়া হয়নি')+'"'+(hasEmail?'':' disabled')+'></textarea>'+
+          '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">'+
+            '<button class="btn small brass"'+(hasEmail?'':' disabled')+' onclick="sendReply(\''+m.ID+'\')">📧 ইমেইলে উত্তর পাঠান</button>'+
+            '<button class="btn small" style="background:var(--rust);" onclick="deleteMsg(\''+m.ID+'\')">ডিলিট</button>'+
+          '</div>'+
+        '</div>'+
+      '</div></div>'+
+    '</div>';
+  }).join('');
+}
+
+async function sendReply(id){
+  var reply=document.getElementById('reply-'+id).value.trim();
+  if(!reply){Toast.error('উত্তর লিখুন');return;}
+  Toast.loading('পাঠানো হচ্ছে...');
+  var res=await Api.post('replyContactMessage',{id:id,reply:reply});
+  if(res&&res.error){Toast.error(res.error);return;}
+  Toast.success('উত্তর পাঠানো হয়েছে ✓');
+  loadMessages();
+}
+
+async function deleteMsg(id){
+  if(!await Dialog.confirm('এই বার্তাটি মুছে ফেলতে চান?'))return;
+  await Api.post('deleteContactMessage',{id:id});
+  Toast.success('বার্তা মুছে ফেলা হয়েছে।');
+  loadMessages();
+}
+
+onAdminStateChange();
+</script>
+</body>
+</html>
