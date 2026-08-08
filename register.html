@@ -48,6 +48,10 @@
         <input id="mEducation" placeholder="যেমন: এসএসসি, বিএ" />
       </div>
       <div>
+        <label>পেশা</label>
+        <input id="mOccupation" placeholder="যেমন: কৃষক, শিক্ষক, ব্যবসায়ী, ছাত্র" />
+      </div>
+      <div>
         <label>রক্তের গ্রুপ</label>
         <select id="mBlood">
           <option value="">— নির্বাচন করুন —</option>
@@ -167,6 +171,7 @@ async function registerMember() {
     village:        document.getElementById('mVillage').value.trim(),
     dob:            document.getElementById('mDob').value,
     education:      document.getElementById('mEducation').value.trim(),
+    occupation:     document.getElementById('mOccupation').value.trim(),
     bloodGroup:     document.getElementById('mBlood').value,
     religion:       document.getElementById('mReligion').value,
     phone:          document.getElementById('mPhone').value.trim(),
@@ -197,7 +202,7 @@ async function registerMember() {
     </div>`;
 
   // ফর্ম রিসেট
-  ['mName','mFather','mMother','mVillage','mEducation','mPhone',
+  ['mName','mFather','mMother','mVillage','mEducation','mOccupation','mPhone',
    'mFee','mCashReceivedBy','mTransFrom','mTransTo','mTransactionId']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('mDob').value = '';
