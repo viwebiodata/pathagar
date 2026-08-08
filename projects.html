@@ -198,7 +198,7 @@ async function loadProjects() {
       '<div class="project-card-footer">' +
         '<span class="project-read-btn">📋 বিস্তারিত দেখুন →</span>' +
         '<div onclick="event.stopPropagation();">' +
-          '<button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,\'🏗️ \'+this.dataset.t+\' — শহীদ আইয়ুব আলী পাঠাগার\')" data-t="' + p.Title.replace(/"/g, '&quot;') + '">🔗 শেয়ার</button>' +
+          '<button class="btn small outline" onclick="ShareUtil.show(this.dataset.t,\'🏗️ \'+this.dataset.t+\' — শহীদ আইয়ুব আলী পাঠাগার\')" data-t="' + p.Title.replace(/"/g, '&quot;') + '" data-id="' + p.ID + '">🔗 শেয়ার</button>' +
           ' ' + adminBtns +
         '</div>' +
       '</div>' +
@@ -233,6 +233,7 @@ function openProject(id) {
     '</div>';
 
   document.body.style.overflow = 'hidden';
+  history.replaceState(null,'',window.location.pathname+'?id='+id);
   document.addEventListener('keydown', projectKeyHandler);
 }
 
@@ -240,6 +241,7 @@ function closeProject(e) {
   if (e && e.target && e.target.id !== 'pBackdrop' && !e.target.classList.contains('project-modal-close')) return;
   document.getElementById('projectModalRoot').innerHTML = '';
   document.body.style.overflow = '';
+  history.replaceState(null,'',window.location.pathname);
   document.removeEventListener('keydown', projectKeyHandler);
 }
 
@@ -311,7 +313,14 @@ async function removeProject(id) {
 }
 
 onAdminStateChange();
-loadProjects();
+loadProjects().then(function() {
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id');
+  if (id) {
+    var p = allProjects.find(function(x){ return x.ID === id; });
+    if (p) openProject(p.ID);
+  }
+});
 </script>
 </body>
 </html>
