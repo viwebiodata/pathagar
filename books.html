@@ -6,41 +6,34 @@
 <title>বই তালিকা — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css" />
 <style>
-  /* ক্রপ UI */
-  .crop-wrap { position:relative; width:100%; max-width:340px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius); background:#111; display:none; touch-action:none; overscroll-behavior:contain; }
-  .crop-wrap img { display:block; width:100%; }
-  .crop-box { position:absolute; border:2px solid var(--brass); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move; touch-action:none; user-select:none; }
-  .crop-handle { position:absolute; width:14px; height:14px; background:var(--brass); border-radius:50%; right:-7px; bottom:-7px; cursor:se-resize; touch-action:none; }
+.book-cover{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:10px;background:var(--line);}
+.book-cover-placeholder{width:100%;aspect-ratio:3/4;background:linear-gradient(135deg,var(--line) 0%,var(--paper) 100%);border-radius:var(--radius);margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem;}
+.tabs{display:flex;gap:0;margin-bottom:22px;border-bottom:2px solid var(--line);}
+.tab-btn{background:none;border:none;padding:10px 20px;font-family:'Hind Siliguri',sans-serif;font-size:.9rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab-btn.active{color:var(--brass-dark);border-bottom-color:var(--brass);font-weight:600;}
+.tab-pane{display:none;}.tab-pane.active{display:block;}
+.rank-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+.rank-num{font-family:'IBM Plex Mono',monospace;font-size:1rem;color:var(--muted);min-width:24px;}
+.rank-cover{width:36px;height:48px;object-fit:cover;border-radius:2px;border:1px solid var(--line);background:var(--line);flex-shrink:0;}
+.rank-info{flex:1;}
+.rank-info strong{display:block;font-size:.92rem;}
+.rank-info span{color:var(--muted);font-size:.8rem;}
+.rank-badge{font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:rgba(169,121,60,.15);color:var(--brass-dark);padding:3px 10px;border-radius:20px;white-space:nowrap;}
 
-  /* বই কার্ড কভার */
-  .book-cover { width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:var(--radius); border:1px solid var(--line); margin-bottom:10px; background:var(--line); }
-  .book-cover-placeholder { width:100%; aspect-ratio:3/4; background:linear-gradient(135deg,var(--line) 0%,var(--paper) 100%); border-radius:var(--radius); margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:2rem; }
-
-  /* পরিসংখ্যান ট্যাব */
-  .tabs { display:flex; gap:0; margin-bottom:22px; border-bottom:2px solid var(--line); }
-  .tab-btn { background:none; border:none; padding:10px 20px; font-family:'Hind Siliguri',sans-serif; font-size:0.9rem; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; }
-  .tab-btn.active { color:var(--brass-dark); border-bottom-color:var(--brass); font-weight:600; }
-  .tab-pane { display:none; }
-  .tab-pane.active { display:block; }
-  .rank-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
-  .rank-num { font-family:'IBM Plex Mono',monospace; font-size:1rem; color:var(--muted); min-width:24px; }
-  .rank-cover { width:36px; height:48px; object-fit:cover; border-radius:2px; border:1px solid var(--line); background:var(--line); flex-shrink:0; }
-  .rank-info { flex:1; }
-  .rank-info strong { display:block; font-size:0.92rem; }
-  .rank-info span { color:var(--muted); font-size:0.8rem; }
-  .rank-badge { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; background:rgba(169,121,60,0.15); color:var(--brass-dark); padding:3px 10px; border-radius:20px; white-space:nowrap; }
+/* crop */
+.crop-wrap{position:relative;width:100%;max-width:340px;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:#111;display:none;touch-action:none;overscroll-behavior:contain;}
+.crop-wrap img{display:block;width:100%;}
+.crop-box{position:absolute;border:2px solid var(--brass);box-shadow:0 0 0 9999px rgba(0,0,0,0.55);cursor:move;touch-action:none;user-select:none;}
+.crop-handle{position:absolute;width:14px;height:14px;background:var(--brass);border-radius:50%;right:-7px;bottom:-7px;cursor:se-resize;touch-action:none;}
 </style>
 </head>
 <body>
 <div id="navRoot"></div>
-
 <main class="wrap">
-
-  <!-- ট্যাব নেভিগেশন -->
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
     <div class="section-label" style="margin:0;">বই তালিকা</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button class="btn small outline" onclick="printBooks()">🖨️ প্রিন্ট / PDF</button>
+      <button class="btn small outline" onclick="printBooks()">🖨️ প্রিন্ট</button>
       <div id="refreshBtnRoot"></div>
     </div>
   </div>
@@ -50,12 +43,10 @@
     <button class="tab-btn" onclick="switchTab('stats')">📊 পঠন পরিসংখ্যান</button>
   </div>
 
-  <!-- ক্যাটালগ ট্যাব -->
+  <!-- ক্যাটালগ -->
   <div id="tab-catalog" class="tab-pane active">
-
-    <!-- সার্চ ও ফিল্টার -->
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-      <input id="searchInput" type="text" placeholder="কোড, বইয়ের নাম বা লেখক..." style="flex:1; min-width:180px;" oninput="applyFilter()" />
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+      <input id="searchInput" placeholder="কোড, বইয়ের নাম বা লেখক..." style="flex:1;min-width:180px;" oninput="applyFilter()" />
       <select id="categoryFilter" style="max-width:180px;" onchange="applyFilter()">
         <option value="">সব ক্যাটাগরি</option>
       </select>
@@ -65,71 +56,60 @@
         <option value="unavailable">বুকিং আছে</option>
       </select>
     </div>
-    <div id="filterSummary" style="font-size:0.82rem; color:var(--muted); margin-bottom:16px;"></div>
+    <div id="filterSummary" style="font-size:.82rem;color:var(--muted);margin-bottom:16px;"></div>
 
-    <!-- অ্যাডমিন: বই যোগ -->
-    <div id="adminBlock" class="admin-only-block" style="display:none; margin-bottom:26px;">
+    <div id="adminBlock" class="admin-only-block" style="display:none;margin-bottom:26px;">
       <span class="admin-badge">নতুন বই যোগ করুন</span>
       <div class="grid-2">
-        <div><label>কোড <span style="color:var(--rust);">*</span></label><input id="bCode" /></div>
-        <div><label>বইয়ের নাম <span style="color:var(--rust);">*</span></label><input id="bTitle" /></div>
-        <div><label>লেখকের নাম <span style="color:var(--rust);">*</span></label><input id="bAuthor" /></div>
+        <div><label>কোড *</label><input id="bCode" /></div>
+        <div><label>বইয়ের নাম *</label><input id="bTitle" /></div>
+        <div><label>লেখক *</label><input id="bAuthor" /></div>
         <div><label>ক্যাটাগরি</label>
           <input id="bCategory" list="catSuggest" placeholder="যেমন: উপন্যাস, ইতিহাস..." />
           <datalist id="catSuggest"></datalist>
         </div>
         <div><label>মোট কপি</label><input id="bCopies" type="number" min="1" value="1" /></div>
       </div>
-
-      <!-- ছবি ক্রপ -->
       <label style="margin-top:14px;">বইয়ের প্রচ্ছদ ছবি</label>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
-        <label class="btn outline" style="cursor:pointer; margin:0;">
-          📷 ক্যামেরা / গ্যালারি
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <label class="btn outline" style="cursor:pointer;margin:0;">
+          📷 ছবি যোগ করুন
           <input type="file" accept="image/*" id="bCoverInput" style="display:none;" onchange="loadCoverImage(event,'add')" />
         </label>
-        <span id="bCoverName" style="font-size:0.82rem; color:var(--muted);"></span>
+        <span id="bCoverName" style="font-size:.82rem;color:var(--muted);"></span>
       </div>
       <div id="addCropWrap" class="crop-wrap">
         <img id="addCropImg" />
         <div id="addCropBox" class="crop-box"><div class="crop-handle" id="addCropHandle"></div></div>
       </div>
       <canvas id="addCropCanvas" style="display:none;"></canvas>
-      <img id="addCoverPreview" style="display:none; width:80px; height:107px; object-fit:cover; border:1px solid var(--line); border-radius:var(--radius); margin-top:8px;" />
-      <button id="addCropBtn" class="btn outline" style="display:none; margin-top:8px;" onclick="cropAndPreview('add')">✂️ এই অংশটুকু ব্যবহার করুন</button>
-
+      <img id="addCoverPreview" style="display:none;width:80px;height:107px;object-fit:cover;border:1px solid var(--line);border-radius:var(--radius);margin-top:8px;" />
+      <button id="addCropBtn" class="btn outline" style="display:none;margin-top:8px;" onclick="cropAndPreview('add')">✂️ এই অংশটুকু ব্যবহার করুন</button>
       <button class="btn brass" style="margin-top:16px;" onclick="addBook()">বই যোগ করুন</button>
-      <div id="bMsg"></div>
     </div>
 
     <div class="card-grid" id="bookGrid"></div>
     <div class="empty-state" id="emptyState" style="display:none;">কোনো বই পাওয়া যায়নি।</div>
   </div>
 
-  <!-- পরিসংখ্যান ট্যাব -->
+  <!-- পরিসংখ্যান -->
   <div id="tab-stats" class="tab-pane">
-    <div id="statsLoading" style="color:var(--muted); font-size:0.9rem; padding:20px 0;">লোড হচ্ছে...</div>
-
+    <div id="statsLoading" style="color:var(--muted);padding:20px 0;">লোড হচ্ছে...</div>
     <div id="statsContent" style="display:none;">
       <div class="grid-2" style="gap:24px;">
-
         <div>
-          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:14px;">সর্বাধিক পঠিত বই</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--brass-dark);margin-bottom:14px;">সর্বাধিক পঠিত বই</div>
           <div id="topBooksList"></div>
         </div>
-
         <div>
-          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--brass-dark); margin-bottom:14px;">সবচেয়ে বেশি বই পড়েছেন</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--brass-dark);margin-bottom:14px;">সবচেয়ে বেশি বই পড়েছেন</div>
           <div id="topMembersList"></div>
         </div>
-
       </div>
     </div>
   </div>
-
 </main>
 
-<!-- এডিট মডাল -->
 <div id="editModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
@@ -138,134 +118,88 @@
 <script src="js/api.js"></script>
 <script>
 renderNav('books.html');
-renderRefreshBtn(() => { loadBooks(); if (statsLoaded) loadStats(); });
+renderRefreshBtn(function() { loadBooks(); if (statsLoaded) loadStats(); });
 
-let allBooks = [];
-let statsLoaded = false;
-let addCoverDataUrl = '';
+var allBooks = [], statsLoaded = false, addCoverDataUrl = '', editCoverDataUrl = '', _cropCleanup = null;
 
-// ---------- ট্যাব ----------
-function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', ['catalog','stats'][i] === name));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'stats' && !statsLoaded) loadStats();
-}
-
-// ---------- অ্যাডমিন ----------
 function onAdminStateChange() {
   document.getElementById('adminBlock').style.display = (isAdmin() || Can.editBooks()) ? 'block' : 'none';
   renderBooks(allBooks);
 }
 
-// ---------- ক্রপ লজিক ----------
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) { b.classList.toggle('active', ['catalog','stats'][i] === name); });
+  document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'stats' && !statsLoaded) loadStats();
+}
+
+// ===== ক্রপ =====
 function loadCoverImage(evt, prefix) {
-  const file = evt.target.files[0];
+  var file = evt.target.files[0];
   if (!file) return;
   document.getElementById(prefix === 'add' ? 'bCoverName' : 'eCoverName').textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = e => initCrop(e.target.result, prefix);
+  var reader = new FileReader();
+  reader.onload = function(e) { initCrop(e.target.result, prefix); };
   reader.readAsDataURL(file);
 }
 
-let _cropCleanup = null;
-
 function initCrop(src, prefix) {
-  // আগের drag listener পরিষ্কার করি
   if (_cropCleanup) { _cropCleanup(); _cropCleanup = null; }
-
-  const wrap = document.getElementById(prefix + 'CropWrap');
-  const img  = document.getElementById(prefix + 'CropImg');
-
-  // আগে visible করি, তারপর ছবি লোড
+  var wrap = document.getElementById(prefix + 'CropWrap');
+  var img  = document.getElementById(prefix + 'CropImg');
   wrap.style.display = 'block';
   document.getElementById(prefix + 'CropBtn').style.display = 'inline-block';
   document.getElementById(prefix === 'add' ? 'addCoverPreview' : 'editCoverPreview').style.display = 'none';
-  if (prefix === 'add') addCoverDataUrl = '';
-  else editCoverDataUrl = '';
-
-  img.onload = () => {
-    // ছবি লোড হওয়ার পর width মাপা — নিশ্চিতভাবে সঠিক পাবে
-    const w = wrap.offsetWidth || 300;
-    const ratio = img.naturalHeight / img.naturalWidth;
-    const iH = w * ratio;
+  if (prefix === 'add') addCoverDataUrl = ''; else editCoverDataUrl = '';
+  img.onload = function() {
+    var w  = wrap.offsetWidth || 300;
+    var iH = w * (img.naturalHeight / img.naturalWidth);
     wrap.style.height = iH + 'px';
-
-    const box = document.getElementById(prefix + 'CropBox');
-    const bw = Math.min(w * 0.75, w);
-    const bh = bw * (4/3);
-    const bx = (w - bw) / 2;
-    const by = Math.max(0, (iH - bh) / 2);
-    box.style.left   = bx + 'px';
-    box.style.top    = by + 'px';
-    box.style.width  = bw + 'px';
-    box.style.height = bh + 'px';
-    _cropCleanup = makeDraggable(box, document.getElementById(prefix + 'CropHandle'), prefix, iH, w);
+    var box = document.getElementById(prefix + 'CropBox');
+    var bw = Math.min(w * 0.75, w), bh = bw * (4/3);
+    box.style.left = ((w-bw)/2) + 'px'; box.style.top = (Math.max(0,(iH-bh)/2)) + 'px';
+    box.style.width = bw + 'px'; box.style.height = bh + 'px';
+    _cropCleanup = makeDraggable(box, document.getElementById(prefix + 'CropHandle'), iH, w);
   };
-
   img.src = src;
 }
 
-function setBox(box, x, y, w, h, maxH, maxW) {
-  box.style.left = x + 'px';
-  box.style.top  = y + 'px';
-  box.style.width  = w + 'px';
-  box.style.height = h + 'px';
-}
-
-function makeDraggable(box, handle, prefix, imgH, imgW) {
-  let startX, startY, startL, startT, startW, startH, mode;
-
-  function onMove(e) {
-    if (!mode) return; // dragging না হলে কিছুই করব না
-    const p = e.touches ? e.touches[0] : e;
-    const dx = p.clientX - startX, dy = p.clientY - startY;
-    if (mode === 'move') {
-      const nx = Math.max(0, Math.min(imgW - startW, startL + dx));
-      const ny = Math.max(0, Math.min(imgH - startH, startT + dy));
-      box.style.left = nx + 'px'; box.style.top = ny + 'px';
-    } else {
-      const nw = Math.max(60, startW + dx);
-      const nh = nw * (4/3);
-      if (startL + nw <= imgW && startT + nh <= imgH) {
-        box.style.width = nw + 'px'; box.style.height = nh + 'px';
-      }
-    }
-    e.preventDefault(); // শুধু drag চলার সময়ই scroll ব্লক হবে
-  }
-  function onUp() {
-    mode = null;
-    // drag শেষ হলে scroll আবার চালু
-    document.body.style.overflow = '';
-  }
+function makeDraggable(box, handle, imgH, imgW) {
+  var mode, startX, startY, startL, startT, startW, startH;
   function onDown(e, m) {
     mode = m;
-    const p = e.touches ? e.touches[0] : e;
-    startX = p.clientX; startY = p.clientY;
-    startL = parseInt(box.style.left)  || 0;
-    startT = parseInt(box.style.top)   || 0;
-    startW = parseInt(box.style.width) || 60;
-    startH = parseInt(box.style.height)|| 80;
-    document.body.style.overflow = 'hidden'; // drag এর সময়ই শুধু
+    var p = e.touches ? e.touches[0] : e;
+    startX=p.clientX; startY=p.clientY;
+    startL=parseInt(box.style.left)||0; startT=parseInt(box.style.top)||0;
+    startW=parseInt(box.style.width)||60; startH=parseInt(box.style.height)||80;
+    document.body.style.overflow='hidden'; e.preventDefault();
+  }
+  function onMove(e) {
+    if (!mode) return;
+    var p = e.touches ? e.touches[0] : e;
+    var dx=p.clientX-startX, dy=p.clientY-startY;
+    if (mode==='move') {
+      box.style.left=Math.max(0,Math.min(imgW-startW,startL+dx))+'px';
+      box.style.top =Math.max(0,Math.min(imgH-startH,startT+dy))+'px';
+    } else {
+      var nw=Math.max(60,startW+dx), nh=nw*(4/3);
+      if (startL+nw<=imgW && startT+nh<=imgH) { box.style.width=nw+'px'; box.style.height=nh+'px'; }
+    }
     e.preventDefault();
   }
-
-  box.addEventListener('mousedown',    e => onDown(e, 'move'));
-  box.addEventListener('touchstart',   e => onDown(e, 'move'),   { passive: false });
-  handle.addEventListener('mousedown',  e => { e.stopPropagation(); onDown(e, 'resize'); });
-  handle.addEventListener('touchstart', e => { e.stopPropagation(); onDown(e, 'resize'); }, { passive: false });
-
-  // mousemove/touchmove: passive:true যাতে সাধারণ scroll ব্লক না হয়
-  // কিন্তু drag চলার সময় onMove এর ভেতরে preventDefault() করা হয়
+  function onUp() { mode=null; document.body.style.overflow=''; }
+  box.addEventListener('mousedown',   function(e){ onDown(e,'move'); });
+  box.addEventListener('touchstart',  function(e){ onDown(e,'move'); }, {passive:false});
+  handle.addEventListener('mousedown',  function(e){ e.stopPropagation(); onDown(e,'resize'); });
+  handle.addEventListener('touchstart', function(e){ e.stopPropagation(); onDown(e,'resize'); }, {passive:false});
   document.addEventListener('mousemove', onMove);
-  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchmove',  onMove, {passive:false});
   document.addEventListener('mouseup',   onUp);
   document.addEventListener('touchend',  onUp);
-
-  // crop wrap লুকানোর সময় listener সরানোর জন্য cleanup function রিটার্ন করছি
   return function cleanup() {
     document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchmove',  onMove);
     document.removeEventListener('mouseup',   onUp);
     document.removeEventListener('touchend',  onUp);
     document.body.style.overflow = '';
@@ -273,242 +207,231 @@ function makeDraggable(box, handle, prefix, imgH, imgW) {
 }
 
 function cropAndPreview(prefix) {
-  const wrap   = document.getElementById(prefix + 'CropWrap');
-  const img    = document.getElementById(prefix + 'CropImg');
-  const box    = document.getElementById(prefix + 'CropBox');
-  const canvas = document.getElementById(prefix + 'CropCanvas');
-
-  const scaleX = img.naturalWidth  / wrap.offsetWidth;
-  const scaleY = img.naturalHeight / wrap.offsetHeight;
-  const sx = parseInt(box.style.left)   * scaleX;
-  const sy = parseInt(box.style.top)    * scaleY;
-  const sw = parseInt(box.style.width)  * scaleX;
-  const sh = parseInt(box.style.height) * scaleY;
-
-  // আউটপুট: ৬০০×৮০০ (3:4) — বই কভারের জন্য ভালো রেজুলেশন
-  const outW = 600, outH = 800;
-  canvas.width = outW; canvas.height = outH;
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-  if (prefix === 'add') addCoverDataUrl = dataUrl;
-  else editCoverDataUrl = dataUrl;
-
-  const preview = document.getElementById(prefix === 'add' ? 'addCoverPreview' : 'editCoverPreview');
-  preview.src = dataUrl;
-  preview.style.display = 'block';
-  wrap.style.display = 'none';
-  document.getElementById(prefix + 'CropBtn').style.display = 'none';
-
-  // ক্রপ শেষ — scroll পুনরায় চালু করা, stale drag mode বাতিল
-  if (_cropCleanup) { _cropCleanup(); _cropCleanup = null; }
-  document.body.style.overflow = '';
-  document.body.style.touchAction = '';
+  var wrap=document.getElementById(prefix+'CropWrap'), img=document.getElementById(prefix+'CropImg');
+  var box=document.getElementById(prefix+'CropBox'), canvas=document.getElementById(prefix+'CropCanvas');
+  var scX=img.naturalWidth/wrap.offsetWidth, scY=img.naturalHeight/wrap.offsetHeight;
+  var sx=parseInt(box.style.left)*scX, sy=parseInt(box.style.top)*scY;
+  var sw=parseInt(box.style.width)*scX, sh=parseInt(box.style.height)*scY;
+  canvas.width=600; canvas.height=800;
+  var ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  ctx.drawImage(img,sx,sy,sw,sh,0,0,600,800);
+  var dataUrl=canvas.toDataURL('image/jpeg',0.85);
+  if (prefix==='add') addCoverDataUrl=dataUrl; else editCoverDataUrl=dataUrl;
+  var prev=document.getElementById(prefix==='add'?'addCoverPreview':'editCoverPreview');
+  prev.src=dataUrl; prev.style.display='block';
+  wrap.style.display='none';
+  document.getElementById(prefix+'CropBtn').style.display='none';
+  if (_cropCleanup) { _cropCleanup(); _cropCleanup=null; }
+  document.body.style.overflow='';
 }
 
-// ---------- বই কার্ড ----------
-function printBooks() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const cat = document.getElementById('categoryFilter').value;
-  let list = allBooks;
-  if (q) list = list.filter(b => b.Title.toLowerCase().includes(q) || b.Author.toLowerCase().includes(q) || String(b.Code).includes(q));
-  if (cat) list = list.filter(b => b.Category === cat);
-  const catLabel = cat ? ' · ' + cat : '';
-  const html = '<table><thead><tr><th>কোড</th><th>বইয়ের নাম</th><th>লেখক</th><th>বিষয়</th><th>মোট কপি</th><th>উপলব্ধ</th></tr></thead><tbody>' +
-    list.map(b => '<tr><td>' + b.Code + '</td><td>' + b.Title + '</td><td>' + b.Author + '</td><td>' + (b.Category||'—') + '</td><td>' + (b.TotalCopies||1) + '</td><td>' + (b.AvailableCopies||0) + '</td></tr>').join('') +
-    '</tbody></table>';
-  PrintUtil.print('বই তালিকা (' + list.length + 'টি)', html, '<span>মোট: ' + list.length + 'টি বই' + catLabel + '</span>');
-}
-
+// ===== বই কার্ড =====
 function bookCard(b) {
-  const total     = Number(b.TotalCopies) || 1;
-  const available = Number(b.AvailableCopies);
-  const isAvail   = available > 0;
-  const coverHtml = b.CoverURL
-    ? `<img class="book-cover" src="${b.CoverURL}" loading="lazy" />`
-    : `<div class="book-cover-placeholder">📖</div>`;
-  const copyBadge = total > 1
-    ? `<span style="font-size:0.74rem; color:var(--muted); font-family:'IBM Plex Mono',monospace;">${available}/${total} কপি</span>`
-    : '';
-  const adminBtns = (isAdmin() || Can.editBooks()) ? `
-    <div class="row-actions" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
-      <button class="btn small outline" onclick="openEdit('${b.Code}')">এডিট</button>
-      <button class="btn small" style="background:var(--rust);" onclick="removeBook('${b.Code}')">ডিলিট</button>
-    </div>` : '';
-  const shareTitle = (b.Title + ' — ' + b.Author).replace(/'/g, '\\x27');
-  const shareText  = ('📚 ' + b.Title + ' (' + b.Author + ') — শহীদ আইয়ুব আলী পাঠাগার').replace(/'/g, '\\x27');
-  const shareBtn = `<button class="btn small outline" style="margin-top:8px;width:100%;" onclick="ShareUtil.show('${shareTitle}','${shareText}',window.location.href)">🔗 শেয়ার করুন</button>`;
-  return `
-    <div class="index-card">
-      ${coverHtml}
-      <div class="catid mono">কোড: ${b.Code}${b.Category ? ' · ' + b.Category : ''}</div>
-      <h3>${b.Title}</h3>
-      <div class="author">লেখক: ${b.Author}</div>
-      <div class="meta-row" style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-        <span class="tag ${isAvail ? 'available' : 'unavailable'}">${isAvail ? 'উপলব্ধ' : 'অনুপলব্ধ'}</span>
-        ${copyBadge}
-      </div>
-      ${shareBtn}
-      ${adminBtns}
-    </div>`;
+  var total=Number(b.TotalCopies)||1, avail=Number(b.AvailableCopies), isAvail=avail>0;
+  var code=String(b.Code), codeQ=JSON.stringify(code);
+  var cover=b.CoverURL
+    ? '<img class="book-cover" src="'+b.CoverURL+'" loading="lazy" />'
+    : '<div class="book-cover-placeholder">\u{1F4D6}</div>';
+  var copyBadge=total>1?'<span style="font-size:.74rem;color:var(--muted);">'+avail+'/'+total+' \u0995\u09AA\u09BF</span>':'';
+  var statusTag='<span class="tag '+(isAvail?'available':'unavailable')+'">'+(isAvail?'\u0989\u09AA\u09B2\u09AC\u09CD\u09A7':'\u0985\u09A8\u09C1\u09AA\u09B2\u09AC\u09CD\u09A7')+'</span>';
+  var adminBtns='';
+  if (isAdmin()||Can.editBooks()) {
+    adminBtns='<div class="row-actions" style="margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;">'+
+      '<button class="btn small outline" onclick="event.stopPropagation();openEdit('+codeQ+')">\u098F\u09A1\u09BF\u099F</button> '+
+      '<button class="btn small" style="background:var(--rust);" onclick="event.stopPropagation();removeBook('+codeQ+')">\u09A1\u09BF\u09B2\u09BF\u099F</button></div>';
+  }
+  return '<div class="index-card" data-code="'+code+'" onclick="openBookDetail(\''+code+'\')" style="cursor:pointer;">'+
+    cover+
+    '<div class="catid mono">\u0995\u09CB\u09A1: '+code+(b.Category?' \xb7 '+b.Category:'')+'</div>'+
+    '<h3>'+b.Title+'</h3>'+
+    '<div class="author">\u09B2\u09C7\u0996\u0995: '+b.Author+'</div>'+
+    '<div class="meta-row" style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">'+statusTag+copyBadge+'</div>'+
+    adminBtns+
+  '</div>';
 }
 
+// ===== বইয়ের বিস্তারিত modal =====
+function openBookDetail(code) {
+  var b=allBooks.find(function(x){return String(x.Code)===String(code);});
+  if (!b) return;
+  var avail=Number(b.AvailableCopies)||0;
+  var shareURL=window.location.origin+window.location.pathname+'?code='+encodeURIComponent(code);
+  var cover=b.CoverURL?'<img src="'+b.CoverURL+'" style="width:100%;max-height:260px;object-fit:cover;border-radius:8px 8px 0 0;" />':'';
+  var statusTag=avail>0?'<span class="tag available">\u0989\u09AA\u09B2\u09AC\u09CD\u09A7</span>':'<span class="tag unavailable">\u0985\u09A8\u09C1\u09AA\u09B2\u09AC\u09CD\u09A7</span>';
+  var copyInfo=Number(b.TotalCopies)>1?(b.AvailableCopies+'/'+b.TotalCopies+' \u0995\u09AA\u09BF'):'';
+
+  var modal=document.createElement('div');
+  modal.className='modal-backdrop';
+  modal.onclick=function(e){if(e.target===modal)closeBookDetail();};
+  modal.innerHTML=
+    '<div class="modal" style="max-width:460px;padding:0;overflow:hidden;" onclick="event.stopPropagation()">'+
+      cover+
+      '<div style="padding:22px 24px 24px;">'+
+        '<div style="font-family:IBM Plex Mono,monospace;font-size:.72rem;color:var(--muted);margin-bottom:6px;">\u0995\u09CB\u09A1: '+b.Code+(b.Category?' \xb7 '+b.Category:'')+'</div>'+
+        '<h3 style="font-size:1.3rem;margin-bottom:6px;">'+b.Title+'</h3>'+
+        '<div style="color:var(--muted);margin-bottom:14px;">\u09B2\u09C7\u0996\u0995: '+b.Author+'</div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">'+statusTag+'<span style="font-size:.82rem;color:var(--muted);">'+copyInfo+'</span></div>'+
+        '<div style="display:flex;gap:10px;">'+
+          '<button class="btn outline" style="flex:1;" onclick="closeBookDetail()">\u2190 \u09AB\u09BF\u09B0\u09C7 \u09AF\u09BE\u09A8</button>'+
+          '<button class="btn outline" id="bkShareBtn">\uD83D\uDD17 \u09B6\u09C7\u09AF\u09BC\u09BE\u09B0</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+  document.getElementById('editModalRoot').innerHTML='';
+  document.getElementById('editModalRoot').appendChild(modal);
+  document.getElementById('bkShareBtn').onclick=function(){
+    ShareUtil.show(b.Title, b.Title+' ('+b.Author+') \u2014 \u09B6\u09B9\u09C0\u09A6 \u0986\u0987\u09AF\u09BC\u09C1\u09AC \u0986\u09B2\u09C0 \u09AA\u09BE\u09A0\u09BE\u0997\u09BE\u09B0', shareURL);
+  };
+  document.body.style.overflow='hidden';
+  history.pushState({book: code},'',window.location.pathname+'?code='+encodeURIComponent(code));
+}
+function closeBookDetail() {
+  document.getElementById('editModalRoot').innerHTML='';
+  document.body.style.overflow='';
+  history.pushState(null,'',window.location.pathname);
+}
+
+// ===== ফিল্টার ও রেন্ডার =====
 function renderBooks(list) {
-  const grid  = document.getElementById('bookGrid');
-  const empty = document.getElementById('emptyState');
-  document.getElementById('filterSummary').textContent = list.length > 0 ? `মোট ${list.length}টি বই` : '';
-  if (!list || list.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  grid.innerHTML = list.map(bookCard).join('');
+  var grid=document.getElementById('bookGrid'), empty=document.getElementById('emptyState');
+  document.getElementById('filterSummary').textContent=list.length?'\u09AE\u09CB\u09A4 '+list.length+'\u099F\u09BF \u09AC\u0987':'';
+  if (!list||!list.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=list.map(bookCard).join('');
 }
 
 function applyFilter() {
-  const q      = document.getElementById('searchInput').value.trim().toLowerCase();
-  const cat    = document.getElementById('categoryFilter').value;
-  const avail  = document.getElementById('availFilter').value;
-  let list = allBooks;
-  if (q)    list = list.filter(b => String(b.Code).toLowerCase().includes(q) || String(b.Title).toLowerCase().includes(q) || String(b.Author).toLowerCase().includes(q));
-  if (cat)  list = list.filter(b => String(b.Category) === cat);
-  if (avail === 'available')   list = list.filter(b => Number(b.AvailableCopies) > 0);
-  if (avail === 'unavailable') list = list.filter(b => Number(b.AvailableCopies) === 0);
+  var q=document.getElementById('searchInput').value.trim().toLowerCase();
+  var cat=document.getElementById('categoryFilter').value;
+  var av=document.getElementById('availFilter').value;
+  var list=allBooks;
+  if (q) list=list.filter(function(b){return String(b.Code).toLowerCase().includes(q)||String(b.Title).toLowerCase().includes(q)||String(b.Author).toLowerCase().includes(q);});
+  if (cat) list=list.filter(function(b){return String(b.Category)===cat;});
+  if (av==='available') list=list.filter(function(b){return Number(b.AvailableCopies)>0;});
+  if (av==='unavailable') list=list.filter(function(b){return Number(b.AvailableCopies)===0;});
   renderBooks(list);
 }
 
 async function loadBooks() {
-  allBooks = await Api.get('listBooks');
-  const cats = [...new Set(allBooks.map(b => b.Category).filter(Boolean))].sort();
-  const sel = document.getElementById('categoryFilter');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
-  document.getElementById('catSuggest').innerHTML = cats.map(c => `<option value="${c}"></option>`).join('');
+  allBooks=await Api.get('listBooks')||[];
+  var cats=[...new Set(allBooks.map(function(b){return b.Category;}).filter(Boolean))].sort();
+  var sel=document.getElementById('categoryFilter'), cur=sel.value;
+  sel.innerHTML='<option value="">\u09B8\u09AC \u0995\u09CD\u09AF\u09BE\u099F\u09BE\u0997\u09B0\u09BF</option>'+cats.map(function(c){return '<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
+  document.getElementById('catSuggest').innerHTML=cats.map(function(c){return '<option value="'+c+'"></option>';}).join('');
   applyFilter();
+  // deep link
+  var params=new URLSearchParams(window.location.search);
+  var code=params.get('code');
+  if (code) setTimeout(function(){openBookDetail(code);},200);
 }
 
-document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') applyFilter(); });
+document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')applyFilter();});
 
-// ---------- বই যোগ ----------
+// ===== বই যোগ =====
 async function addBook() {
-  const payload = {
-    code:        document.getElementById('bCode').value.trim(),
-    title:       document.getElementById('bTitle').value.trim(),
-    author:      document.getElementById('bAuthor').value.trim(),
-    category:    document.getElementById('bCategory').value.trim(),
-    totalCopies: document.getElementById('bCopies').value || 1,
-    cover:       addCoverDataUrl,
+  var payload={
+    code:document.getElementById('bCode').value.trim(),
+    title:document.getElementById('bTitle').value.trim(),
+    author:document.getElementById('bAuthor').value.trim(),
+    category:document.getElementById('bCategory').value.trim(),
+    totalCopies:document.getElementById('bCopies').value||1,
+    cover:addCoverDataUrl,
   };
-  if (!payload.code || !payload.title || !payload.author) {
-    Toast.error('কোড, নাম ও লেখক আবশ্যক'); return;
-  }
-  Toast.loading('বই সংরক্ষণ হচ্ছে...');
-  const res = await Api.post('addBook', payload);
-  if (res.error) { Toast.error(res.error); return; }
-  Toast.success('বই সফলভাবে যোগ হয়েছে ✓');
-  ['bCode','bTitle','bAuthor','bCategory'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('bCopies').value = 1;
-  document.getElementById('bCoverInput').value = '';
-  document.getElementById('bCoverName').textContent = '';
-  document.getElementById('addCoverPreview').style.display = 'none';
-  document.getElementById('addCropWrap').style.display = 'none';
-  addCoverDataUrl = '';
+  if (!payload.code||!payload.title||!payload.author){Toast.error('\u0995\u09CB\u09A1, \u09A8\u09BE\u09AE \u0993 \u09B2\u09C7\u0996\u0995 \u0986\u09AC\u09B6\u09CD\u09AF\u0995');return;}
+  Toast.loading('\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u09B9\u099A\u09CD\u099B\u09C7...');
+  var res=await Api.post('addBook',payload);
+  if (res.error){Toast.error(res.error);return;}
+  Toast.success('\u09AC\u0987 \u09AF\u09CB\u0997 \u09B9\u09AF\u09BC\u09C7\u099B\u09C7 \u2713');
+  ['bCode','bTitle','bAuthor','bCategory'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('bCopies').value=1;
+  document.getElementById('bCoverInput').value='';
+  document.getElementById('bCoverName').textContent='';
+  document.getElementById('addCoverPreview').style.display='none';
+  document.getElementById('addCropWrap').style.display='none';
+  addCoverDataUrl='';
   loadBooks();
 }
 
 async function removeBook(code) {
-  if (!await Dialog.confirm(`কোড ${code} এর বইটি মুছে ফেলতে চান?`, {okText:'হ্যাঁ, মুছুন'})) return;
-  await Api.post('deleteBook', { code });
+  if (!await Dialog.confirm('\u0995\u09CB\u09A1 '+code+' \u098F\u09B0 \u09AC\u0987\u099F\u09BF \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09A4\u09C7 \u099A\u09BE\u09A8?',{okText:'\u09B9\u09CD\u09AF\u09BE\u0981, \u09AE\u09C1\u099B\u09C1\u09A8'})) return;
+  await Api.post('deleteBook',{code:code});
+  Toast.success('\u09AC\u0987 \u09AE\u09C1\u099B\u09C7 \u09AB\u09C7\u09B2\u09BE \u09B9\u09AF\u09BC\u09C7\u099B\u09C7\u0964');
   loadBooks();
 }
 
-// ---------- এডিট মডাল ----------
-let editCoverDataUrl = '';
-
+// ===== এডিট =====
 function openEdit(code) {
-  const b = allBooks.find(x => String(x.Code) === String(code));
+  var b=allBooks.find(function(x){return String(x.Code)===String(code);});
   if (!b) return;
-  editCoverDataUrl = '';
-  document.getElementById('editModalRoot').innerHTML = `
-    <div class="modal-backdrop" onclick="closeEdit(event)">
-      <div class="modal" style="max-width:460px;" onclick="event.stopPropagation()">
-        <h3>বই এডিট করুন</h3>
-        <label>কোড</label><input value="${b.Code}" disabled />
-        <label>বইয়ের নাম</label><input id="eTitle" value="${b.Title}" />
-        <label>লেখকের নাম</label><input id="eAuthor" value="${b.Author}" />
-        <label>ক্যাটাগরি</label><input id="eCategory" value="${b.Category || ''}" />
-        <label>মোট কপি</label><input id="eCopies" type="number" min="1" value="${b.TotalCopies || 1}" />
-        <div style="font-size:0.8rem; color:var(--muted); margin:4px 0 12px;">বর্তমানে উপলব্ধ: ${b.AvailableCopies || 0} কপি</div>
-
-        <label>প্রচ্ছদ ছবি ${b.CoverURL ? '(বদলাতে চাইলে নতুন ছবি দিন)' : ''}</label>
-        ${b.CoverURL ? `<img src="${b.CoverURL}" style="width:60px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:2px; margin-bottom:8px; display:block;" />` : ''}
-        <label class="btn outline" style="cursor:pointer; display:inline-block; margin-bottom:8px;">
-          📷 ছবি বদলান
-          <input type="file" accept="image/*" style="display:none;" onchange="loadCoverImage(event,'edit')" />
-        </label>
-        <span id="eCoverName" style="font-size:0.82rem; color:var(--muted); margin-left:8px;"></span>
-        <div id="editCropWrap" class="crop-wrap"><img id="editCropImg" /><div id="editCropBox" class="crop-box"><div class="crop-handle" id="editCropHandle"></div></div></div>
-        <canvas id="editCropCanvas" style="display:none;"></canvas>
-        <img id="editCoverPreview" style="display:none; width:60px; height:80px; object-fit:cover; border:1px solid var(--line); border-radius:2px; margin-top:6px;" />
-        <button id="editCropBtn" class="btn outline" style="display:none; margin:8px 0;" onclick="cropAndPreview('edit')">✂️ এই অংশটুকু ব্যবহার করুন</button>
-
-        <button class="btn brass" style="margin-top:16px;" onclick="saveEdit('${b.Code}')">সংরক্ষণ করুন</button>
-        <button class="btn outline" style="margin-top:16px;" onclick="closeEdit()">বাতিল</button>
-      </div>
-    </div>`;
+  editCoverDataUrl='';
+  document.getElementById('editModalRoot').innerHTML=
+    '<div class="modal-backdrop" onclick="closeEdit(event)">'+
+      '<div class="modal" style="max-width:460px;" onclick="event.stopPropagation()">'+
+        '<h3>\u09AC\u0987 \u098F\u09A1\u09BF\u099F \u0995\u09B0\u09C1\u09A8</h3>'+
+        '<label>\u0995\u09CB\u09A1</label><input value="'+b.Code+'" disabled />'+
+        '<label>\u09AC\u0987\u09AF\u09BC\u09C7\u09B0 \u09A8\u09BE\u09AE</label><input id="eTitle" value="'+b.Title+'" />'+
+        '<label>\u09B2\u09C7\u0996\u0995\u09C7\u09B0 \u09A8\u09BE\u09AE</label><input id="eAuthor" value="'+b.Author+'" />'+
+        '<label>\u0995\u09CD\u09AF\u09BE\u099F\u09BE\u0997\u09B0\u09BF</label><input id="eCategory" value="'+(b.Category||'')+'" />'+
+        '<label>\u09AE\u09CB\u099F \u0995\u09AA\u09BF</label><input id="eCopies" type="number" min="1" value="'+(b.TotalCopies||1)+'" />'+
+        '<div style="font-size:.8rem;color:var(--muted);margin:4px 0 12px;">\u09AC\u09B0\u09CD\u09A4\u09AE\u09BE\u09A8\u09C7 \u0989\u09AA\u09B2\u09AC\u09CD\u09A7: '+(b.AvailableCopies||0)+' \u0995\u09AA\u09BF</div>'+
+        '<label>\u09AA\u09CD\u09B0\u099A\u09CD\u099B\u09A6 \u099B\u09AC\u09BF</label>'+
+        (b.CoverURL?'<img src="'+b.CoverURL+'" style="width:60px;height:80px;object-fit:cover;border:1px solid var(--line);border-radius:2px;margin-bottom:8px;display:block;" />':'')+
+        '<label class="btn outline" style="cursor:pointer;display:inline-block;margin-bottom:8px;">\uD83D\uDCF7 \u099B\u09AC\u09BF \u09AC\u09A6\u09B2\u09BE\u09A8<input type="file" accept="image/*" style="display:none;" onchange="loadCoverImage(event,\'edit\')" /></label>'+
+        '<span id="eCoverName" style="font-size:.82rem;color:var(--muted);margin-left:8px;"></span>'+
+        '<div id="editCropWrap" class="crop-wrap"><img id="editCropImg" /><div id="editCropBox" class="crop-box"><div class="crop-handle" id="editCropHandle"></div></div></div>'+
+        '<canvas id="editCropCanvas" style="display:none;"></canvas>'+
+        '<img id="editCoverPreview" style="display:none;width:60px;height:80px;object-fit:cover;border:1px solid var(--line);border-radius:2px;margin-top:6px;" />'+
+        '<button id="editCropBtn" class="btn outline" style="display:none;margin:8px 0;" onclick="cropAndPreview(\'edit\')">\u2702\uFE0F \u098F\u0987 \u0985\u0982\u09B6\u099F\u09C1\u0995\u09C1 \u09AC\u09CD\u09AF\u09AC\u09B9\u09BE\u09B0 \u0995\u09B0\u09C1\u09A8</button>'+
+        '<button class="btn brass" style="margin-top:16px;" onclick="saveEdit(\''+b.Code+'\')">\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u0995\u09B0\u09C1\u09A8</button>'+
+        '<button class="btn outline" style="margin-top:16px;" onclick="closeEdit()">\u09AC\u09BE\u09A4\u09BF\u09B2</button>'+
+      '</div>'+
+    '</div>';
 }
-function closeEdit() { document.getElementById('editModalRoot').innerHTML = ''; }
-
-async function saveEdit(code) {
-  const payload = {
-    code,
-    title:       document.getElementById('eTitle').value.trim(),
-    author:      document.getElementById('eAuthor').value.trim(),
-    category:    document.getElementById('eCategory').value.trim(),
-    totalCopies: document.getElementById('eCopies').value,
-    cover:       editCoverDataUrl,
-  };
-  const res = await Api.post('updateBook', payload);
-  if (res.error) { Toast.error(res.error); return; }
-  closeEdit();
-  loadBooks();
+function closeEdit(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('editModalRoot').innerHTML='';}
+async function saveEdit(code){
+  var payload={code:code,title:document.getElementById('eTitle').value.trim(),author:document.getElementById('eAuthor').value.trim(),category:document.getElementById('eCategory').value.trim(),totalCopies:document.getElementById('eCopies').value,cover:editCoverDataUrl};
+  Toast.loading('\u09B8\u0982\u09B0\u0995\u09CD\u09B7\u09A3 \u09B9\u099A\u09CD\u099B\u09C7...');
+  var res=await Api.post('updateBook',payload);
+  if(res.error){Toast.error(res.error);return;}
+  Toast.success('\u0986\u09AA\u09A1\u09C7\u099F \u09B9\u09AF\u09BC\u09C7\u099B\u09C7 \u2713');
+  closeEdit();loadBooks();
 }
 
-// ---------- পরিসংখ্যান ----------
-async function loadStats() {
-  document.getElementById('statsLoading').style.display = 'block';
-  document.getElementById('statsContent').style.display = 'none';
-  const stats = await Api.get('getReadingStats');
-  statsLoaded = true;
-  document.getElementById('statsLoading').style.display = 'none';
-  document.getElementById('statsContent').style.display = 'block';
+// ===== প্রিন্ট =====
+function printBooks(){
+  var q=document.getElementById('searchInput').value.trim().toLowerCase();
+  var cat=document.getElementById('categoryFilter').value;
+  var list=allBooks;
+  if(q) list=list.filter(function(b){return b.Title.toLowerCase().includes(q)||b.Author.toLowerCase().includes(q)||String(b.Code).includes(q);});
+  if(cat) list=list.filter(function(b){return b.Category===cat;});
+  var catLabel=cat?' \xb7 '+cat:'';
+  var html='<table><thead><tr><th>\u0995\u09CB\u09A1</th><th>\u09AC\u0987\u09AF\u09BC\u09C7\u09B0 \u09A8\u09BE\u09AE</th><th>\u09B2\u09C7\u0996\u0995</th><th>\u09AC\u09BF\u09B7\u09AF\u09BC</th><th>\u09AE\u09CB\u099F \u0995\u09AA\u09BF</th><th>\u0989\u09AA\u09B2\u09AC\u09CD\u09A7</th></tr></thead><tbody>'+
+    list.map(function(b){return '<tr><td>'+b.Code+'</td><td>'+b.Title+'</td><td>'+b.Author+'</td><td>'+(b.Category||'\u2014')+'</td><td>'+(b.TotalCopies||1)+'</td><td>'+(b.AvailableCopies||0)+'</td></tr>';}).join('')+
+    '</tbody></table>';
+  PrintUtil.print('\u09AC\u0987 \u09A4\u09BE\u09B2\u09BF\u0995\u09BE ('+list.length+'\u099F\u09BF)',html,'<span>\u09AE\u09CB\u09A4: '+list.length+'\u099F\u09BF \u09AC\u0987'+catLabel+'</span>');
+}
 
-  document.getElementById('topBooksList').innerHTML = stats.topBooks.length === 0
-    ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
-    : stats.topBooks.map(function(b, i) {
-        const coverEl = b.coverUrl
-          ? '<img class="rank-cover" src="' + b.coverUrl + '" />'
-          : '<div class="rank-cover" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>';
-        return '<div class="rank-row">' +
-          '<div class="rank-num">' + (i+1) + '</div>' +
-          coverEl +
-          '<div class="rank-info"><strong>' + b.title + '</strong><span>' + b.author + '</span></div>' +
-          '<span class="rank-badge">' + b.count + ' বার</span>' +
-          '</div>';
+// ===== পরিসংখ্যান =====
+var statsLoaded=false;
+async function loadStats(){
+  document.getElementById('statsLoading').style.display='block';
+  document.getElementById('statsContent').style.display='none';
+  var stats=await Api.get('getReadingStats');
+  statsLoaded=true;
+  document.getElementById('statsLoading').style.display='none';
+  document.getElementById('statsContent').style.display='block';
+  document.getElementById('topBooksList').innerHTML=!stats.topBooks||!stats.topBooks.length
+    ? '<p style="color:var(--muted);">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8\u09CB \u09AC\u09C1\u0995\u09BF\u0982 \u09A8\u09C7\u0987\u0964</p>'
+    : stats.topBooks.map(function(b,i){
+        var cover=b.coverUrl?'<img class="rank-cover" src="'+b.coverUrl+'" />':'<div class="rank-cover" style="display:flex;align-items:center;justify-content:center;">\uD83D\uDCD6</div>';
+        return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div>'+cover+'<div class="rank-info"><strong>'+b.title+'</strong><span>'+b.author+'</span></div><span class="rank-badge">'+b.count+' \u09AC\u09BE\u09B0</span></div>';
       }).join('');
-
-  document.getElementById('topMembersList').innerHTML = stats.topMembers.length === 0
-    ? '<p style="color:var(--muted);">এখনো কোনো বুকিং নেই।</p>'
-    : stats.topMembers.map(function(m, i) {
-        const photoEl = m.photoUrl
-          ? '<img class="rank-cover" src="' + m.photoUrl + '" style="border-radius:50%;" />'
-          : '<div class="rank-cover" style="border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👤</div>';
-        return '<div class="rank-row">' +
-          '<div class="rank-num">' + (i+1) + '</div>' +
-          photoEl +
-          '<div class="rank-info"><strong>' + m.name + '</strong><span class="mono">' + m.id + '</span></div>' +
-          '<span class="rank-badge">' + m.count + 'টি বই</span>' +
-          '</div>';
+  document.getElementById('topMembersList').innerHTML=!stats.topMembers||!stats.topMembers.length
+    ? '<p style="color:var(--muted);">\u098F\u0996\u09A8\u09CB \u0995\u09CB\u09A8\u09CB \u09AC\u09C1\u0995\u09BF\u0982 \u09A8\u09C7\u0987\u0964</p>'
+    : stats.topMembers.map(function(m,i){
+        var photo=m.photoUrl?'<img class="rank-cover" src="'+m.photoUrl+'" style="border-radius:50%;" />':'<div class="rank-cover" style="border-radius:50%;display:flex;align-items:center;justify-content:center;">\uD83D\uDC64</div>';
+        return '<div class="rank-row"><div class="rank-num">'+(i+1)+'</div>'+photo+'<div class="rank-info"><strong>'+m.name+'</strong><span class="mono">'+m.id+'</span></div><span class="rank-badge">'+m.count+'\u099F\u09BF \u09AC\u0987</span></div>';
       }).join('');
 }
 
