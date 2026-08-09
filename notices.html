@@ -239,6 +239,7 @@ function openNotice(id) {
     '</div>';
 
   document.body.style.overflow = 'hidden';
+  history.pushState({notice: id}, '', window.location.pathname + '?id=' + id);
 
   // ESC key
   document.addEventListener('keydown', noticeKeyHandler);
@@ -248,7 +249,7 @@ function closeNotice(e) {
   if (e && e.target && e.target.id !== 'nBackdrop' && !e.target.classList.contains('notice-modal-close')) return;
   document.getElementById('noticeModalRoot').innerHTML = '';
   document.body.style.overflow = '';
-  history.replaceState(null,'',window.location.pathname);
+  history.pushState(null,'',window.location.pathname);
   document.removeEventListener('keydown', noticeKeyHandler);
 }
 
