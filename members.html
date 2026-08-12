@@ -82,6 +82,13 @@
   border:1px solid #ddd6cc;background:white;
 }
 .modal .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:10px 16px; }
+.btn.small { font-size:0.7rem;padding:4px 14px; }
+.btn.outline { background:transparent;border:1px solid #d6cec0; }
+.btn.outline:hover { background:#f4f0ea; }
+.btn.brass { background:#a9793c;color:white; }
+.btn.brass:hover { background:#8f6532; }
+.btn.rust { background:#a0443b;color:white; }
+.btn.rust:hover { background:#8a3931; }
 </style>
 </head>
 <body>
@@ -154,7 +161,7 @@ function openMemberCard(id) {
 
   const adminActions = isAdmin()
     ? '<button class="btn small outline" onclick="closeCard();openEdit(\'' + m.ID + '\')">এডিট</button> ' +
-      '<button class="btn small" style="background:var(--rust);" onclick="closeCard();removeMember(\'' + m.ID + '\')">ডিলিট</button>'
+      '<button class="btn small rust" onclick="closeCard();removeMember(\'' + m.ID + '\')">ডিলিট</button>'
     : '<button class="btn small outline" onclick="closeCard()">বন্ধ করুন</button>';
 
   const backdrop = document.createElement('div');
@@ -231,7 +238,7 @@ function renderMembers() {
     const role    = committeeByMember[m.ID] || m.MemberType || 'সাধারণ সদস্য';
     const actions = isAdmin()
       ? '<button class="btn small outline" onclick="event.stopPropagation();openEdit(\'' + m.ID + '\')">এডিট</button> ' +
-        '<button class="btn small" style="background:var(--rust);" onclick="event.stopPropagation();removeMember(\'' + m.ID + '\')">ডিলিট</button>'
+        '<button class="btn small rust" onclick="event.stopPropagation();removeMember(\'' + m.ID + '\')">ডিলিট</button>'
       : '';
     return '<tr onclick="openMemberCard(\'' + m.ID + '\')" title="বিস্তারিত দেখুন">' +
       '<td>' + photo + '</td>' +
@@ -270,10 +277,13 @@ function printMembers() {
   PrintUtil.print('সদস্য তালিকা (' + list.length + ' জন)', html, '<span>মোট: ' + list.length + ' জন</span>');
 }
 
-// ===== এডিট মডাল =====
+// ===== এডিট মডাল - FIXED =====
 function openEdit(id) {
   const m = allMembers.find(function(x){ return x.ID === id; });
-  if (!m) return;
+  if (!m) {
+    Toast.error('সদস্য পাওয়া যায়নি');
+    return;
+  }
   editPhotoDataUrl = '';
   
   const photoHtml = m.PhotoURL 
@@ -281,7 +291,7 @@ function openEdit(id) {
     : '<img id="editPhotoPreview" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--brass);margin-top:8px;" />';
 
   document.getElementById('editModalRoot').innerHTML =
-    '<div class="modal-backdrop" onclick="closeEdit(event)">' +
+    '<div class="modal-backdrop" id="editBackdrop" onclick="closeEdit(event)">' +
       '<div class="modal" onclick="event.stopPropagation()">' +
         '<h3 style="margin-bottom:16px;">✏️ সদস্য এডিট করুন</h3>' +
         '<label>আইডি</label><input value="' + m.ID + '" disabled style="background:#f0ebe3;" />' +
