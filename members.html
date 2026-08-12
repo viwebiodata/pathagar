@@ -61,6 +61,27 @@
 /* টেবিল row hover */
 #memberBody tr { cursor:pointer;transition:background .12s; }
 #memberBody tr:hover { background:rgba(169,121,60,.06); }
+
+/* modal styles */
+.modal-backdrop {
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9000;backdrop-filter:blur(3px);
+  padding:16px;
+}
+.modal {
+  background:white;border-radius:20px;padding:28px 32px;
+  max-width:560px;width:100%;max-height:90vh;overflow-y:auto;
+  box-shadow:0 30px 60px rgba(0,0,0,0.25);
+  animation:_tin .25s cubic-bezier(.34,1.56,.64,1);
+}
+.modal h3 { font-family:'Fraunces',serif;font-size:1.2rem;margin-bottom:16px; }
+.modal label { font-weight:500;font-size:0.8rem;display:block;margin:8px 0 4px; }
+.modal input, .modal select {
+  width:100%;padding:8px 14px;border-radius:40px;
+  border:1px solid #ddd6cc;background:white;
+}
+.modal .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:10px 16px; }
 </style>
 </head>
 <body>
@@ -254,13 +275,18 @@ function openEdit(id) {
   const m = allMembers.find(function(x){ return x.ID === id; });
   if (!m) return;
   editPhotoDataUrl = '';
+  
+  const photoHtml = m.PhotoURL 
+    ? '<img id="editPhotoPreview" src="' + m.PhotoURL + '" style="width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--brass);margin-top:8px;display:block;" />'
+    : '<img id="editPhotoPreview" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--brass);margin-top:8px;" />';
+
   document.getElementById('editModalRoot').innerHTML =
     '<div class="modal-backdrop" onclick="closeEdit(event)">' +
-      '<div class="modal" style="max-width:500px;" onclick="event.stopPropagation()">' +
-        '<h3>সদস্য এডিট করুন</h3>' +
-        '<label>আইডি</label><input value="' + m.ID + '" disabled />' +
+      '<div class="modal" onclick="event.stopPropagation()">' +
+        '<h3 style="margin-bottom:16px;">✏️ সদস্য এডিট করুন</h3>' +
+        '<label>আইডি</label><input value="' + m.ID + '" disabled style="background:#f0ebe3;" />' +
         '<div class="grid-2">' +
-          '<div><label>নাম</label><input id="eName" value="' + (m.Name||'') + '" /></div>' +
+          '<div><label>নাম *</label><input id="eName" value="' + (m.Name||'') + '" /></div>' +
           '<div><label>বাবার নাম</label><input id="eFather" value="' + (m.FatherName||'') + '" /></div>' +
           '<div><label>মায়ের নাম</label><input id="eMother" value="' + (m.MotherName||'') + '" /></div>' +
           '<div><label>গ্রাম</label><input id="eVillage" value="' + (m.Village||'') + '" /></div>' +
@@ -277,10 +303,10 @@ function openEdit(id) {
         '</div>' +
         '<label style="margin-top:14px;">ছবি বদলান</label>' +
         '<input type="file" accept="image/*" onchange="handleEditPhoto(event)" />' +
-        (m.PhotoURL?'<img src="'+m.PhotoURL+'" id="editPhotoPreview" style="width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--brass);margin-top:8px;display:block;" />':'<img id="editPhotoPreview" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--brass);margin-top:8px;" />') +
+        photoHtml +
         '<label style="margin-top:14px;">চাঁদা (৳)</label><input id="eFee" type="number" value="' + (m.FeeAmount||0) + '" />' +
         '<div style="display:flex;gap:10px;margin-top:20px;">' +
-          '<button class="btn brass" style="flex:1;" onclick="saveEdit(\'' + m.ID + '\')">সংরক্ষণ করুন</button>' +
+          '<button class="btn brass" style="flex:1;" onclick="saveEdit(\'' + m.ID + '\')">💾 সংরক্ষণ করুন</button>' +
           '<button class="btn outline" onclick="closeEdit()">বাতিল</button>' +
         '</div>' +
       '</div>' +
@@ -310,7 +336,10 @@ function handleEditPhoto(evt) {
       ctx.drawImage(img, sx, sy, min, min, 0, 0, s, s);
       editPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
       const prev = document.getElementById('editPhotoPreview');
-      prev.src = editPhotoDataUrl; prev.style.display = 'block';
+      if (prev) {
+        prev.src = editPhotoDataUrl; 
+        prev.style.display = 'block';
+      }
     };
     img.src = e.target.result;
   };
@@ -318,21 +347,25 @@ function handleEditPhoto(evt) {
 }
 
 async function saveEdit(id) {
+  const name = document.getElementById('eName').value.trim();
+  if (!name) { Toast.error('নাম দিন'); return; }
+  
   const payload = {
-    id,
-    name:        document.getElementById('eName').value.trim(),
-    fatherName:  document.getElementById('eFather').value.trim(),
-    motherName:  document.getElementById('eMother').value.trim(),
-    village:     document.getElementById('eVillage').value.trim(),
-    dob:         document.getElementById('eDob').value,
-    education:   document.getElementById('eEducation').value.trim(),
-    occupation:  document.getElementById('eOccupation').value.trim(),
-    bloodGroup:  document.getElementById('eBlood').value,
-    religion:    document.getElementById('eReligion').value,
-    phone:       document.getElementById('ePhone').value.trim(),
-    feeAmount:   document.getElementById('eFee').value || 0,
-    photo:       editPhotoDataUrl,
+    id: id,
+    name: name,
+    fatherName: document.getElementById('eFather').value.trim(),
+    motherName: document.getElementById('eMother').value.trim(),
+    village: document.getElementById('eVillage').value.trim(),
+    dob: document.getElementById('eDob').value,
+    education: document.getElementById('eEducation').value.trim(),
+    occupation: document.getElementById('eOccupation').value.trim(),
+    bloodGroup: document.getElementById('eBlood').value,
+    religion: document.getElementById('eReligion').value,
+    phone: document.getElementById('ePhone').value.trim(),
+    feeAmount: document.getElementById('eFee').value || 0,
+    photo: editPhotoDataUrl || '',
   };
+  
   Toast.loading('সংরক্ষণ হচ্ছে...');
   const res = await Api.post('updateMember', payload);
   if (res.error) { Toast.error(res.error); return; }
