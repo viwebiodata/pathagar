@@ -142,7 +142,7 @@ function onAdminStateChange() {
 
 // ===== সদস্য আইডি কার্ড popup =====
 function openMemberCard(id) {
-  const m = allMembers.find(function(x){ return x.ID === id; });
+  const m = allMembers.find(function(x){ return String(x.ID) === String(id); });
   if (!m) return;
 
   const photo = m.PhotoURL
@@ -279,9 +279,12 @@ function printMembers() {
 
 // ===== এডিট মডাল - FIXED =====
 function openEdit(id) {
-  const m = allMembers.find(function(x){ return x.ID === id; });
+  // Convert both to string for comparison
+  const m = allMembers.find(function(x){ return String(x.ID) === String(id); });
   if (!m) {
-    Toast.error('সদস্য পাওয়া যায়নি');
+    Toast.error('সদস্য পাওয়া যায়নি (ID: ' + id + ')');
+    console.log('Available members:', allMembers);
+    console.log('Searching for ID:', id);
     return;
   }
   editPhotoDataUrl = '';
