@@ -110,7 +110,6 @@
       overflow: hidden;
     }
 
-    /* library header - centered, print button floating right */
     .panel-library-header {
       background: linear-gradient(145deg, #1C2B39 0%, #2a3f52 100%);
       color: #f3eee2;
@@ -303,14 +302,21 @@
       }
     }
 
-    /* PRINT: print button hidden, everything centered */
+    /* PRINT: only right panel visible, library header centered, print button hidden */
     @media print {
       body { background: white; }
       .committee-sidebar, .admin-only-block, .page-toolbar,
       #refreshBtnRoot, .panel-header .admin-actions,
-      .panel-library-header .print-btn-float { display: none !important; }
+      .panel-library-header .print-btn-float,
+      #navRoot, .footer { display: none !important; }
 
-      .right-panel { border: none; box-shadow: none; border-radius: 0; }
+      .right-panel { 
+        border: none; 
+        box-shadow: none; 
+        border-radius: 0;
+        display: block !important;
+        width: 100% !important;
+      }
       .committee-split { display: block; }
       .wrap { padding: 0.2in; }
 
@@ -344,6 +350,8 @@
         background: rgba(169, 121, 60, 0.1);
         border-color: rgba(169, 121, 60, 0.2);
       }
+      #panelPlaceholder { display: none !important; }
+      #panelContent { display: flex !important; }
     }
   </style>
 </head>
@@ -376,7 +384,6 @@
       </div>
 
       <div class="right-panel" id="rightPanel">
-        <!-- লাইব্রেরির নাম ও ঠিকানা (সবকিছু মাঝে) + প্রিন্ট বাটন ডানে ভাসমান -->
         <div class="panel-library-header">
           <div class="lib-title">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</div>
           <div class="lib-address">কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
