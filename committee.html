@@ -6,105 +6,50 @@
 <title>কমিটি — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
 <link rel="stylesheet" href="css/style.css"/>
 <style>
-.com-layout { display:grid; grid-template-columns:280px 1fr; gap:22px; align-items:start; }
-@media(max-width:700px){ .com-layout { grid-template-columns:1fr; } }
-
-/* কমিটি সাইডবার */
-.com-list { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
-.com-list-header { padding:14px 16px; background:var(--ink); color:var(--paper);
-  font-family:'IBM Plex Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; }
-.com-item { padding:14px 16px; border-bottom:1px solid var(--line); cursor:pointer;
-  transition:background .12s; position:relative; }
-.com-item:last-child { border-bottom:none; }
-.com-item:hover { background:rgba(169,121,60,.05); }
-.com-item.active { background:rgba(169,121,60,.1); border-left:3px solid var(--brass); }
-.com-item-name { font-weight:600; font-size:.95rem; color:var(--ink); margin-bottom:3px; }
-.com-item-meta { font-size:.75rem; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
-.com-status { display:inline-block; padding:1px 8px; border-radius:20px; font-size:.68rem;
-  font-weight:600; margin-left:6px; }
-.com-status.active-badge { background:rgba(95,113,97,.15); color:var(--sage); }
-.com-status.expired { background:rgba(154,59,59,.1); color:var(--rust); }
-.com-status.no-date { background:rgba(169,121,60,.1); color:var(--brass-dark); }
-
-/* ডান প্যানেল */
-.com-panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); }
-.com-panel-header { padding:18px 22px; border-bottom:1px solid var(--line);
-  display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; }
-.com-panel-title { font-family:'Fraunces',serif; font-size:1.3rem; font-weight:700; color:var(--ink); }
-.com-panel-dates { font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--muted); margin-top:4px; }
-.com-panel-desc  { font-size:.88rem; color:var(--muted); margin-top:6px; }
-
-/* সদস্য কার্ড */
-.member-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; padding:20px 22px; }
-.member-tile { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
-  padding:16px 14px; text-align:center; position:relative; transition:box-shadow .15s; }
-.member-tile:hover { box-shadow:0 4px 16px rgba(28,43,57,.1); }
-.member-tile-photo { width:60px; height:60px; border-radius:50%; object-fit:cover;
-  border:2px solid var(--brass); margin:0 auto 10px; display:block; }
-.member-tile-placeholder { width:60px; height:60px; border-radius:50%;
-  background:rgba(169,121,60,.12); border:2px solid var(--brass);
-  margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
-.member-tile-name { font-weight:600; font-size:.88rem; color:var(--ink); margin-bottom:4px; }
-.member-tile-pos  { display:inline-block; padding:2px 10px; border-radius:20px;
-  font-size:.72rem; font-weight:600; background:rgba(169,121,60,.1); color:var(--brass-dark); margin-bottom:6px; }
-.member-tile-village { font-size:.75rem; color:var(--muted); }
-.member-tile-del { position:absolute; top:6px; right:6px;
-  background:rgba(154,59,59,.1); border:none; border-radius:50%;
-  width:22px; height:22px; cursor:pointer; color:var(--rust); font-size:.7rem;
-  display:none; align-items:center; justify-content:center; }
-.member-tile:hover .member-tile-del.visible { display:flex; }
-
-.empty-panel { padding:60px 22px; text-align:center; color:var(--muted); font-size:.95rem; }
+.com-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+.com-card-header{background:linear-gradient(135deg,#1C2B39,#2a3f52);color:var(--paper);padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.com-card-header h3{font-family:'Fraunces',serif;font-size:1.1rem;margin-bottom:4px;}
+.com-card-meta{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:rgba(243,238,226,.6);}
+.com-card-body{padding:16px 20px;}
+.member-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);}
+.member-row:last-child{border-bottom:none;}
+.member-photo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--brass);flex-shrink:0;}
+.member-photo-ph{width:40px;height:40px;border-radius:50%;background:rgba(169,121,60,.15);border:2px solid var(--brass);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.member-info{flex:1;}
+.member-info strong{display:block;font-size:.93rem;}
+.member-info span{font-size:.78rem;color:var(--muted);}
+.pos-badge{font-size:.72rem;padding:2px 10px;border-radius:20px;background:rgba(169,121,60,.12);color:var(--brass-dark);border:1px solid rgba(169,121,60,.25);white-space:nowrap;}
 </style>
 </head>
 <body>
 <div id="navRoot"></div>
 <main class="wrap">
-
   <div class="page-toolbar">
     <div class="section-label">পরিচালনা কমিটি</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <button class="btn small outline" id="printComBtn" style="display:none;" onclick="printCommittee()">🖨️ প্রিন্ট</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn small outline" onclick="printCommittee()">🖨️ প্রিন্ট</button>
       <div id="refreshBtnRoot"></div>
     </div>
   </div>
 
   <!-- অ্যাডমিন: নতুন কমিটি -->
-  <div id="adminBlock" class="admin-only-block" style="display:none;margin-bottom:22px;">
+  <div id="adminBlock" class="admin-only-block" style="display:none;margin-bottom:24px;">
     <span class="admin-badge">নতুন কমিটি তৈরি করুন</span>
     <div class="grid-2">
-      <div><label>কমিটির নাম <span style="color:var(--rust);">*</span></label>
-        <input id="cName" placeholder="যেমন: কার্যনির্বাহী কমিটি ২০২৪-২৫" /></div>
-      <div><label>বিবরণ (ঐচ্ছিক)</label>
-        <input id="cDesc" placeholder="সংক্ষিপ্ত বিবরণ" /></div>
-      <div><label>মেয়াদ শুরু (ঐচ্ছিক)</label>
-        <input id="cStart" type="date" /></div>
-      <div><label>মেয়াদ শেষ (ঐচ্ছিক)</label>
-        <input id="cEnd" type="date" /></div>
+      <div><label>কমিটির নাম *</label><input id="comName" placeholder="যেমন: ২০২৫-২৬ কার্যনির্বাহী কমিটি"/></div>
+      <div><label>বিবরণ</label><input id="comDescr" placeholder="ঐচ্ছিক"/></div>
+      <div><label>শুরুর তারিখ</label><input id="comStart" type="date"/></div>
+      <div><label>শেষ তারিখ</label><input id="comEnd" type="date"/></div>
     </div>
-    <button class="btn brass" style="margin-top:16px;" onclick="addCommittee()">কমিটি তৈরি করুন</button>
+    <button class="btn brass" style="margin-top:16px;" onclick="createCommittee()">কমিটি তৈরি করুন</button>
   </div>
 
-  <div class="com-layout">
-
-    <!-- বাঁয়ে কমিটি লিস্ট -->
-    <div>
-      <div class="com-list" id="committeeList">
-        <div class="com-list-header">কমিটি তালিকা</div>
-        <div id="committeeItems"><div style="padding:20px;color:var(--muted);font-size:.9rem;">লোড হচ্ছে...</div></div>
-      </div>
-    </div>
-
-    <!-- ডানে সদস্য প্যানেল -->
-    <div id="rightPanel">
-      <div class="com-panel">
-        <div class="empty-panel">← বাম থেকে একটি কমিটি বেছে নিন</div>
-      </div>
-    </div>
-
-  </div>
+  <div id="committeeList"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">এখনো কোনো কমিটি তৈরি করা হয়নি।</div>
 </main>
 
+<!-- সদস্য যোগের modal -->
+<div id="addMemberModalRoot"></div>
 <div id="adminModalRoot"></div>
 <div class="footer">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার · কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
 
@@ -112,254 +57,189 @@
 <script src="js/api.js"></script>
 <script>
 renderNav('committee.html');
-renderRefreshBtn(loadAll);
+renderRefreshBtn(loadCommittees);
 
-var allCommittees = [], allMembers = [], activeCommitteeId = null;
+var _committees = [], _allMembers = [], _panelData = {};
 
 function onAdminStateChange() {
   document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
-  loadAll();
 }
 
-async function loadAll() {
+// ===== সব কমিটি লোড =====
+async function loadCommittees() {
   var res = await Promise.all([Api.get('listCommittees'), Api.get('listMembers')]);
-  allCommittees = res[0] || [];
-  allMembers    = res[1] || [];
-  renderCommitteeList();
-  if (activeCommitteeId) loadCommitteePanel(activeCommitteeId);
+  _committees = res[0] || [];
+  _allMembers = res[1] || [];
+
+  var el    = document.getElementById('committeeList');
+  var empty = document.getElementById('emptyState');
+
+  if (!_committees.length) { el.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  el.innerHTML = _committees.map(function(com) {
+    var dateRange = '';
+    if (com.StartDate || com.EndDate) {
+      dateRange = (com.StartDate ? fmtDate(com.StartDate) : '') +
+        (com.EndDate ? ' — ' + fmtDate(com.EndDate) : '');
+    }
+    var adminBtns = isAdmin()
+      ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button class="btn small outline" style="border-color:rgba(255,255,255,.3);color:var(--paper);" onclick="openAddMember(\'' + com.ID + '\')">+ সদস্য যোগ করুন</button>' +
+          '<button class="btn small" style="background:var(--rust);" onclick="deleteCommittee(\'' + com.ID + '\')">ডিলিট</button>' +
+        '</div>'
+      : '';
+    return '<div class="com-card" id="com-' + com.ID + '">' +
+      '<div class="com-card-header">' +
+        '<div>' +
+          '<h3>' + com.Name + '</h3>' +
+          (com.Description ? '<div class="com-card-meta">' + com.Description + '</div>' : '') +
+          (dateRange ? '<div class="com-card-meta" style="margin-top:4px;">📅 ' + dateRange + '</div>' : '<div class="com-card-meta">মেয়াদ অনির্ধারিত</div>') +
+        '</div>' +
+        adminBtns +
+      '</div>' +
+      '<div class="com-card-body" id="panel-' + com.ID + '">' +
+        '<div style="color:var(--muted);font-size:.85rem;padding:8px 0;">সদস্য লোড হচ্ছে...</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // প্রতিটা কমিটির সদস্য লোড
+  _committees.forEach(function(com) {
+    loadCommitteePanel(com.ID);
+  });
 }
 
-// ===== মেয়াদ স্ট্যাটাস =====
-function getStatus(com) {
-  if (!com.StartDate && !com.EndDate) return { label:'মেয়াদ নির্ধারিত নেই', cls:'no-date' };
-  var now = new Date();
-  if (com.EndDate && new Date(com.EndDate) < now) return { label:'মেয়াদ শেষ', cls:'expired' };
-  if (com.StartDate && new Date(com.StartDate) > now) return { label:'শুরু হয়নি', cls:'no-date' };
-  return { label:'সক্রিয়', cls:'active-badge' };
-}
+// ===== কমিটির সদস্য লোড =====
+async function loadCommitteePanel(committeeId) {
+  var members = await Api.get('listCommitteeMembers', { committeeId: committeeId });
+  var panel   = document.getElementById('panel-' + committeeId);
+  if (!panel) return;
+  _panelData[committeeId] = members || [];
 
-// ===== কমিটি লিস্ট =====
-function renderCommitteeList() {
-  var el = document.getElementById('committeeItems');
-  if (!allCommittees.length) {
-    el.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:.9rem;">এখনো কোনো কমিটি নেই।<br>উপরে তৈরি করুন।</div>';
+  if (!members || !members.length) {
+    panel.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:8px 0;">এই কমিটিতে এখনো কোনো সদস্য নেই।</div>';
     return;
   }
-  el.innerHTML = allCommittees.map(function(c) {
-    var st = getStatus(c);
-    var dates = '';
-    if (c.StartDate || c.EndDate) {
-      dates = (c.StartDate ? fmtDate(c.StartDate) : '?') + ' — ' + (c.EndDate ? fmtDate(c.EndDate) : 'অনির্দিষ্ট');
-    }
-    return '<div class="com-item' + (c.ID===activeCommitteeId?' active':'') + '" onclick="selectCommittee(\'' + c.ID + '\')">' +
-      '<div class="com-item-name">' + c.Name + '<span class="com-status ' + st.cls + '">' + st.label + '</span></div>' +
-      (dates ? '<div class="com-item-meta">📅 ' + dates + '</div>' : '') +
-      (c.Description ? '<div class="com-item-meta">' + c.Description + '</div>' : '') +
+
+  panel.innerHTML = members.map(function(m) {
+    var photo = m.photoURL
+      ? '<img class="member-photo" src="' + m.photoURL + '" />'
+      : '<div class="member-photo-ph">👤</div>';
+    var adminDel = isAdmin()
+      ? ' <button class="btn small" style="background:var(--rust);margin-left:auto;" onclick="removeMember(\'' + m.id + '\',\'' + committeeId + '\')">বাদ দিন</button>'
+      : '';
+    return '<div class="member-row">' +
+      photo +
+      '<div class="member-info"><strong>' + m.name + '</strong><span class="mono">' + m.memberID + (m.phone ? ' · ' + m.phone : '') + '</span></div>' +
+      '<span class="pos-badge">' + m.position + '</span>' +
+      adminDel +
     '</div>';
   }).join('');
 }
 
-// ===== কমিটি সিলেক্ট =====
-async function selectCommittee(id) {
-  activeCommitteeId = id;
-  renderCommitteeList();
-  await loadCommitteePanel(id);
-  document.getElementById('printComBtn').style.display = 'inline-block';
-}
-
-var activeMembers = [];
-async function loadCommitteePanel(id) {
-  var com = allCommittees.find(function(c){ return c.ID===id; });
-  if (!com) return;
-  var st = getStatus(com);
-  var dates = '';
-  if (com.StartDate || com.EndDate) {
-    dates = (com.StartDate?fmtDate(com.StartDate):'?') + ' — ' + (com.EndDate?fmtDate(com.EndDate):'অনির্দিষ্ট');
-  }
-
-  var panel = document.getElementById('rightPanel');
-  panel.innerHTML =
-    '<div class="com-panel">' +
-      '<div class="com-panel-header">' +
-        '<div>' +
-          '<div class="com-panel-title">' + com.Name + ' <span class="com-status ' + st.cls + '" style="font-size:.75rem;">' + st.label + '</span></div>' +
-          (dates?'<div class="com-panel-dates">📅 ' + dates + '</div>':'') +
-          (com.Description?'<div class="com-panel-desc">' + com.Description + '</div>':'') +
-        '</div>' +
-        (isAdmin()
-          ? '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-              '<button class="btn small outline" onclick="openAddMember(\'' + id + '\')">+ সদস্য যোগ</button>' +
-              '<button class="btn small outline" onclick="openEditCommittee(\'' + id + '\')">✏️ এডিট</button>' +
-              '<button class="btn small" style="background:var(--rust);" onclick="delCommittee(\'' + id + '\')">ডিলিট</button>' +
-            '</div>'
-          : '') +
-      '</div>' +
-      '<div id="memberGridWrap"><div style="padding:30px;text-align:center;color:var(--muted);">লোড হচ্ছে...</div></div>' +
-    '</div>';
-
-  var members = await Api.get('listCommitteeMembers', { committeeId: id });
-  activeMembers = members || [];
-  renderMemberGrid();
-}
-
-function renderMemberGrid() {
-  var el = document.getElementById('memberGridWrap');
-  if (!el) return;
-  if (!activeMembers.length) {
-    el.innerHTML = '<div class="empty-panel">এই কমিটিতে এখনো কোনো সদস্য নেই।</div>';
-    return;
-  }
-  el.innerHTML = '<div class="member-grid">' +
-    activeMembers.map(function(m) {
-      var photo = m.photoURL
-        ? '<img class="member-tile-photo" src="' + m.photoURL + '" alt="' + m.name + '" />'
-        : '<div class="member-tile-placeholder">👤</div>';
-      var delBtn = isAdmin()
-        ? '<button class="member-tile-del visible" title="সরিয়ে দিন" onclick="removeMember(\'' + m.id + '\')">✕</button>'
-        : '';
-      return '<div class="member-tile">' +
-        delBtn + photo +
-        '<div class="member-tile-name">' + m.name + '</div>' +
-        '<div class="member-tile-pos">' + m.position + '</div>' +
-        (m.village?'<div class="member-tile-village">' + m.village + '</div>':'') +
-        (m.phone?'<div style="font-size:.72rem;color:var(--muted);font-family:\'IBM Plex Mono\',monospace;">' + m.phone + '</div>':'') +
-      '</div>';
-    }).join('') +
-  '</div>';
-}
-
-// ===== নতুন কমিটি =====
-async function addCommittee() {
-  var name = document.getElementById('cName').value.trim();
-  if (!name) { Toast.error('কমিটির নাম দিন'); return; }
-  Toast.loading('তৈরি হচ্ছে...');
-  var res = await Api.post('addCommittee', {
-    name: name,
-    description: document.getElementById('cDesc').value.trim(),
-    startDate: document.getElementById('cStart').value,
-    endDate:   document.getElementById('cEnd').value,
-  });
-  if (res.error) { Toast.error(res.error); return; }
-  Toast.success('কমিটি তৈরি হয়েছে ✓');
-  ['cName','cDesc','cStart','cEnd'].forEach(function(id){ document.getElementById(id).value=''; });
-  await loadAll();
-  selectCommittee(res.id);
-}
-
-// ===== কমিটি এডিট =====
-function openEditCommittee(id) {
-  var com = allCommittees.find(function(c){ return c.ID===id; });
-  if (!com) return;
-  var modal = document.createElement('div');
-  modal.className = 'modal-backdrop';
-  modal.onclick = function(e){ if(e.target===modal) modal.remove(); document.body.style.overflow=''; };
-  modal.innerHTML =
-    '<div class="modal" onclick="event.stopPropagation()">' +
-      '<h3>কমিটি এডিট করুন</h3>' +
-      '<label>কমিটির নাম</label><input id="ecName" value="' + com.Name + '" />' +
-      '<label>বিবরণ</label><input id="ecDesc" value="' + (com.Description||'') + '" />' +
-      '<div class="grid-2">' +
-        '<div><label>মেয়াদ শুরু</label><input id="ecStart" type="date" value="' + (com.StartDate?com.StartDate.slice?com.StartDate.slice(0,10):'':'') + '" /></div>' +
-        '<div><label>মেয়াদ শেষ</label><input id="ecEnd" type="date" value="' + (com.EndDate?com.EndDate.slice?com.EndDate.slice(0,10):'':'') + '" /></div>' +
-      '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:18px;">' +
-        '<button class="btn brass" style="flex:1;" onclick="saveCommittee(\'' + id + '\',this.closest(\'.modal-backdrop\'))">সংরক্ষণ</button>' +
-        '<button class="btn outline" onclick="this.closest(\'.modal-backdrop\').remove();document.body.style.overflow=\'\'">বাতিল</button>' +
-      '</div>' +
-    '</div>';
-  document.body.appendChild(modal);
-  document.body.style.overflow = 'hidden';
-}
-
-async function saveCommittee(id, backdrop) {
-  Toast.loading('সংরক্ষণ হচ্ছে...');
-  var res = await Api.post('updateCommittee', {
-    id: id,
-    name:        document.getElementById('ecName').value.trim(),
-    description: document.getElementById('ecDesc').value.trim(),
-    startDate:   document.getElementById('ecStart').value,
-    endDate:     document.getElementById('ecEnd').value,
-  });
-  if (res.error) { Toast.error(res.error); return; }
-  Toast.success('আপডেট হয়েছে ✓');
-  backdrop.remove(); document.body.style.overflow='';
-  loadAll();
-}
-
-async function delCommittee(id) {
-  if (!await Dialog.confirm('এই কমিটি ও এর সব সদস্য মুছে ফেলতে চান?',{okText:'হ্যাঁ, মুছুন'})) return;
-  await Api.post('deleteCommittee',{id:id});
-  Toast.success('কমিটি মুছে ফেলা হয়েছে।');
-  activeCommitteeId = null;
-  document.getElementById('rightPanel').innerHTML = '<div class="com-panel"><div class="empty-panel">← বাম থেকে একটি কমিটি বেছে নিন</div></div>';
-  loadAll();
-}
-
-// ===== সদস্য যোগ =====
+// ===== সদস্য যোগের modal =====
 function openAddMember(committeeId) {
-  var memberOptions = allMembers.map(function(m){
+  var memberOptions = _allMembers.map(function(m) {
     return '<option value="' + m.ID + '">' + m.Name + ' (' + m.ID + ')</option>';
   }).join('');
-
-  var positions = ['সভাপতি','সহ-সভাপতি','সাধারণ সম্পাদক','যুগ্ম সম্পাদক','সাংগঠনিক সম্পাদক',
-    'কোষাধ্যক্ষ','লাইব্রেরিয়ান','প্রচার সম্পাদক','সাংস্কৃতিক সম্পাদক','ক্রীড়া সম্পাদক','সদস্য'];
-  var posOptions = positions.map(function(p){
+  var posOptions = ['সভাপতি','সহ-সভাপতি','সাধারণ সম্পাদক','যুগ্ম সাধারণ সম্পাদক','সাংগঠনিক সম্পাদক',
+    'অর্থ সম্পাদক','কোষাধ্যক্ষ','লাইব্রেরিয়ান','প্রচার সম্পাদক','ত্রাণ ও সমাজকল্যাণ সম্পাদক',
+    'ক্রীড়া ও সাংস্কৃতিক সম্পাদক','কার্যনির্বাহী সদস্য','উপদেষ্টা','অন্যান্য'].map(function(p) {
     return '<option value="' + p + '">' + p + '</option>';
   }).join('');
 
-  var modal = document.createElement('div');
-  modal.className = 'modal-backdrop';
-  modal.onclick = function(e){ if(e.target===modal){modal.remove();document.body.style.overflow='';} };
-  modal.innerHTML =
-    '<div class="modal" onclick="event.stopPropagation()">' +
-      '<h3>কমিটিতে সদস্য যোগ করুন</h3>' +
-      '<label>সদস্য বেছে নিন <span style="color:var(--rust);">*</span></label>' +
-      '<select id="amMember"><option value="">— সদস্য নির্বাচন করুন —</option>' + memberOptions + '</select>' +
-      '<label style="margin-top:14px;">পদবি <span style="color:var(--rust);">*</span></label>' +
-      '<select id="amPosition"><option value="">— পদবি নির্বাচন করুন —</option>' + posOptions + '</select>' +
-      '<input id="amCustomPos" placeholder="অথবা নিজে লিখুন..." style="margin-top:8px;" />' +
-      '<div style="display:flex;gap:10px;margin-top:18px;">' +
-        '<button class="btn brass" style="flex:1;" onclick="submitAddMember(\'' + committeeId + '\',this.closest(\'.modal-backdrop\'))">যোগ করুন</button>' +
-        '<button class="btn outline" onclick="this.closest(\'.modal-backdrop\').remove();document.body.style.overflow=\'\'">বাতিল</button>' +
+  document.getElementById('addMemberModalRoot').innerHTML =
+    '<div class="modal-backdrop" onclick="closeAddMember(event)">' +
+      '<div class="modal" style="max-width:420px;" onclick="event.stopPropagation()">' +
+        '<h3 style="margin-bottom:16px;">কমিটিতে সদস্য যোগ করুন</h3>' +
+        '<label>সদস্য নির্বাচন করুন *</label>' +
+        '<select id="amMember" style="margin-bottom:14px;"><option value="">— সদস্য বাছাই করুন —</option>' + memberOptions + '</select>' +
+        '<label>পদবি *</label>' +
+        '<select id="amPosition" style="margin-bottom:10px;"><option value="">— পদবি বাছাই করুন —</option>' + posOptions + '</select>' +
+        '<label>কাস্টম পদবি (উপরে না পেলে)</label>' +
+        '<input id="amCustomPos" placeholder="নিজে লিখুন..." style="margin-bottom:18px;" />' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button class="btn brass" style="flex:1;" onclick="submitAddMember(\'' + committeeId + '\')">যোগ করুন</button>' +
+          '<button class="btn outline" onclick="closeAddMember()">বাতিল</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
-  document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
 }
 
-async function submitAddMember(committeeId, backdrop) {
+function closeAddMember(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('addMemberModalRoot').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+async function submitAddMember(committeeId) {
   var memberID = document.getElementById('amMember').value;
   var position = document.getElementById('amCustomPos').value.trim() || document.getElementById('amPosition').value;
-  if (!memberID) { Toast.error('সদস্য নির্বাচন করুন'); return; }
+  if (!memberID) { Toast.error('সদস্য বাছাই করুন'); return; }
   if (!position) { Toast.error('পদবি দিন'); return; }
-  Toast.loading('যোগ হচ্ছে...');
-  var res = await Api.post('addCommitteeMember',{committeeId:committeeId,memberID:memberID,position:position});
+  Toast.loading('যোগ করা হচ্ছে...');
+  var res = await Api.post('addCommitteeMember', { committeeId: committeeId, memberID: memberID, position: position });
   if (res.error) { Toast.error(res.error); return; }
-  Toast.success('সদস্য যোগ হয়েছে ✓');
-  backdrop.remove(); document.body.style.overflow='';
+  Toast.success('সদস্য যোগ করা হয়েছে ✓');
+  closeAddMember();
   loadCommitteePanel(committeeId);
 }
 
-async function removeMember(cmId) {
-  if (!await Dialog.confirm('এই সদস্যকে কমিটি থেকে সরিয়ে দিতে চান?',{okText:'হ্যাঁ, সরান'})) return;
-  await Api.post('removeCommitteeMember',{id:cmId});
-  Toast.success('সরিয়ে দেওয়া হয়েছে।');
-  loadCommitteePanel(activeCommitteeId);
+async function removeMember(id, committeeId) {
+  if (!await Dialog.confirm('এই সদস্যকে কমিটি থেকে বাদ দিতে চান?')) return;
+  var res = await Api.post('deleteCommitteeMember', { id: id });
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('সদস্য বাদ দেওয়া হয়েছে।');
+  loadCommitteePanel(committeeId);
+}
+
+// ===== কমিটি তৈরি =====
+async function createCommittee() {
+  var name = document.getElementById('comName').value.trim();
+  if (!name) { Toast.error('কমিটির নাম দিন'); return; }
+  Toast.loading('তৈরি হচ্ছে...');
+  var res = await Api.post('addCommittee', {
+    name:      name,
+    descr:     document.getElementById('comDescr').value.trim(),
+    startDate: document.getElementById('comStart').value,
+    endDate:   document.getElementById('comEnd').value,
+  });
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('কমিটি তৈরি হয়েছে ✓');
+  ['comName','comDescr','comStart','comEnd'].forEach(function(id){ document.getElementById(id).value=''; });
+  loadCommittees();
+}
+
+// ===== কমিটি ডিলিট =====
+async function deleteCommittee(id) {
+  if (!await Dialog.confirm('এই কমিটি ও সব সদস্য মুছে ফেলতে চান?', { okText: 'হ্যাঁ, মুছুন' })) return;
+  var res = await Api.post('deleteCommitteeRecord', { id: id });
+  if (res.error) { Toast.error(res.error); return; }
+  Toast.success('কমিটি মুছে ফেলা হয়েছে।');
+  loadCommittees();
 }
 
 // ===== প্রিন্ট =====
 function printCommittee() {
-  var com = allCommittees.find(function(c){ return c.ID===activeCommitteeId; });
-  if (!com) return;
-  var html = '<table><thead><tr><th>#</th><th>নাম</th><th>পদবি</th><th>গ্রাম</th><th>ফোন</th></tr></thead><tbody>' +
-    activeMembers.map(function(m,i){ return '<tr><td>'+(i+1)+'</td><td>'+m.name+'</td><td>'+m.position+'</td><td>'+(m.village||'—')+'</td><td>'+(m.phone||'—')+'</td></tr>'; }).join('') +
-  '</tbody></table>';
-  var status = getStatus(com);
-  var meta = '<span>' + com.Name + ' · ' + status.label + '</span>';
-  PrintUtil.print(com.Name + ' — সদস্য তালিকা', html, meta);
+  var rows = '';
+  _committees.forEach(function(com) {
+    var mems = _panelData[com.ID] || [];
+    if (!mems.length) return;
+    mems.forEach(function(m, i) {
+      rows += '<tr>' +
+        (i===0?'<td rowspan="'+mems.length+'" style="font-weight:600;vertical-align:top;">'+com.Name+'</td>':'') +
+        '<td>'+(i+1)+'</td><td>'+m.memberID+'</td><td>'+m.name+'</td><td>'+m.position+'</td>' +
+      '</tr>';
+    });
+  });
+  var html = '<table><thead><tr><th>কমিটি</th><th>#</th><th>আইডি</th><th>নাম</th><th>পদবি</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  PrintUtil.print('পরিচালনা কমিটি', html, '<span>মোট কমিটি: ' + _committees.length + 'টি</span>');
 }
 
 onAdminStateChange();
+loadCommittees();
 </script>
 </body>
 </html>
