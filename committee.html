@@ -6,7 +6,6 @@
   <title>কমিটি — শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* reset & variables */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #f6f3ee;
@@ -16,7 +15,6 @@
     }
     .wrap { max-width: 1440px; margin: 0 auto; padding: 20px 28px 10px; }
 
-    /* page toolbar */
     .page-toolbar {
       display: flex;
       justify-content: space-between;
@@ -33,7 +31,6 @@
     }
     .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-    /* admin block */
     .admin-only-block {
       background: #ffffff;
       border-radius: 20px;
@@ -52,7 +49,6 @@
       margin-bottom: 14px;
     }
 
-    /* split layout */
     .committee-split {
       display: flex;
       gap: 24px;
@@ -102,7 +98,6 @@
       border: 1px solid rgba(169, 121, 60, 0.12);
     }
 
-    /* right panel – contains library header + committee card */
     .right-panel {
       flex: 1;
       background: #ffffff;
@@ -115,73 +110,80 @@
       overflow: hidden;
     }
 
-    /* library header inside right panel (top) */
+    /* library header - centered, print button floating right */
     .panel-library-header {
       background: linear-gradient(145deg, #1C2B39 0%, #2a3f52 100%);
       color: #f3eee2;
       padding: 18px 24px;
       border-radius: 20px 20px 0 0;
+      text-align: center;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+      gap: 3px;
+      position: relative;
     }
     .panel-library-header .lib-title {
       font-family: 'Fraunces', serif;
       font-weight: 500;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       letter-spacing: 0.2px;
     }
     .panel-library-header .lib-address {
-      font-size: 0.8rem;
-      opacity: 0.75;
+      font-size: 0.85rem;
+      opacity: 0.8;
       font-weight: 300;
     }
-    .panel-library-header .print-btn-sm {
+    .panel-library-header .lib-reg {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      font-weight: 300;
+      margin-top: 2px;
+    }
+    .panel-library-header .print-btn-float {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
       color: #f3eee2;
-      padding: 6px 18px;
+      padding: 6px 22px;
       border-radius: 40px;
       font-size: 0.75rem;
       cursor: pointer;
       transition: 0.2s;
     }
-    .panel-library-header .print-btn-sm:hover {
+    .panel-library-header .print-btn-float:hover {
       background: rgba(255,255,255,0.15);
       border-color: rgba(255,255,255,0.35);
     }
 
-    /* committee card inside panel */
     .panel-committee-card {
       padding: 0;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
+
     .panel-header {
       padding: 16px 24px 12px;
       border-bottom: 1px solid #e6dfd6;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+      text-align: center;
       background: #fcfaf8;
     }
     .panel-header .title-group h2 {
       font-family: 'Fraunces', serif;
       font-weight: 500;
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       color: #1e2b39;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
     .panel-header .title-group .panel-meta {
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       color: #7d7260;
       background: #f0ebe3;
-      padding: 2px 14px;
+      padding: 2px 20px;
       border-radius: 30px;
       display: inline-block;
     }
@@ -189,9 +191,10 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 6px;
     }
 
-    /* member list */
     .member-list-container {
       padding: 12px 24px 24px;
       flex: 1;
@@ -270,7 +273,6 @@
     .empty-state { padding: 30px 10px; text-align: center; color: #9a8e7c; }
     .mono { font-family: 'IBM Plex Mono', monospace; }
 
-    /* modal */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.3);
       display: flex; align-items: center; justify-content: center;
@@ -294,15 +296,54 @@
       .committee-split { flex-direction: column; }
       .committee-sidebar { flex: 1 1 auto; width: 100%; max-height: 300px; }
       .grid-2 { grid-template-columns: 1fr; }
+      .panel-library-header .print-btn-float {
+        position: static;
+        transform: none;
+        margin-top: 6px;
+      }
     }
+
+    /* PRINT: print button hidden, everything centered */
     @media print {
       body { background: white; }
-      .panel-library-header { background: #1C2B39 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .committee-sidebar, .admin-only-block, .panel-header .admin-actions, #refreshBtnRoot, .page-toolbar .btn { display: none !important; }
-      .right-panel { border: none; box-shadow: none; }
+      .committee-sidebar, .admin-only-block, .page-toolbar,
+      #refreshBtnRoot, .panel-header .admin-actions,
+      .panel-library-header .print-btn-float { display: none !important; }
+
+      .right-panel { border: none; box-shadow: none; border-radius: 0; }
       .committee-split { display: block; }
       .wrap { padding: 0.2in; }
+
+      .panel-library-header {
+        background: #1C2B39 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        border-radius: 0 !important;
+        padding: 14px 20px;
+        text-align: center !important;
+      }
+      .panel-library-header .lib-title { font-size: 1.4rem; }
+      .panel-library-header .lib-address { font-size: 0.9rem; }
+      .panel-library-header .lib-reg { font-size: 0.8rem; }
+
+      .panel-header {
+        background: #fcfaf8 !important;
+        border-bottom: 1px solid #ccc;
+        padding: 12px 20px;
+        text-align: center !important;
+      }
+      .panel-header .title-group h2 { font-size: 1.3rem; }
+      .panel-header .title-group .panel-meta { font-size: 0.85rem; }
+
+      .member-list-container { padding: 12px 20px 20px; }
       .member-row { break-inside: avoid; }
+      .member-photo, .member-photo-ph {
+        border-color: #a9793c;
+      }
+      .pos-badge {
+        background: rgba(169, 121, 60, 0.1);
+        border-color: rgba(169, 121, 60, 0.2);
+      }
     }
   </style>
 </head>
@@ -312,12 +353,10 @@
     <div class="page-toolbar">
       <div class="section-label">পরিচালনা কমিটি</div>
       <div class="flex">
-        <button class="btn small outline" onclick="window.print()">🖨️ প্রিন্ট (A4)</button>
         <div id="refreshBtnRoot"></div>
       </div>
     </div>
 
-    <!-- অ্যাডমিন: নতুন কমিটি -->
     <div id="adminBlock" class="admin-only-block" style="display:none;">
       <span class="admin-badge">⚙️ নতুন কমিটি তৈরি করুন</span>
       <div class="grid-2">
@@ -329,7 +368,6 @@
       <button class="btn brass" style="margin-top:16px;" onclick="createCommittee()">কমিটি তৈরি করুন</button>
     </div>
 
-    <!-- দুই কলাম -->
     <div class="committee-split">
       <div class="committee-sidebar" id="committeeSidebar">
         <div class="sidebar-header">📋 কমিটি সমূহ</div>
@@ -337,18 +375,15 @@
         <div class="empty-state" id="emptyStateSidebar" style="display:none;">কোনো কমিটি নেই</div>
       </div>
 
-      <!-- ডান প্যানেল: উপরে লাইব্রেরির নাম + ঠিকানা, তারপর কমিটি কার্ড -->
       <div class="right-panel" id="rightPanel">
-        <!-- লাইব্রেরির নাম ও ঠিকানা (সর্বোপরি) -->
+        <!-- লাইব্রেরির নাম ও ঠিকানা (সবকিছু মাঝে) + প্রিন্ট বাটন ডানে ভাসমান -->
         <div class="panel-library-header">
-          <div>
-            <div class="lib-title">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</div>
-            <div class="lib-address">কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
-          </div>
-          <button class="print-btn-sm" onclick="window.print()">🖨️ প্রিন্ট</button>
+          <div class="lib-title">শহীদ আইয়ুব আলী স্মৃতি সংঘ ও পাঠাগার</div>
+          <div class="lib-address">কুলানন্দপুর, বলগাড়ী, ঘোড়াঘাট, দিনাজপুর</div>
+          <div class="lib-reg">প্রতিষ্ঠিত · ২০০১ · নিবন্ধন নং: ১৬৯৩/০২</div>
+          <button class="print-btn-float" onclick="window.print()">🖨️ প্রিন্ট</button>
         </div>
 
-        <!-- প্লেসহোল্ডার / কমিটি কন্টেন্ট -->
         <div class="panel-placeholder" id="panelPlaceholder">◂ বাম পাশ থেকে একটি কমিটি নির্বাচন করুন</div>
 
         <div id="panelContent" style="display:none; flex-direction:column; flex:1;">
@@ -380,6 +415,37 @@
     renderRefreshBtn(loadCommittees);
 
     var _committees = [], _allMembers = [], _panelData = {}, _selectedCommitteeId = null;
+
+    var POSITION_RANK = {
+      'সভাপতি': 1,
+      'সহ-সভাপতি': 2,
+      'সাধারণ সম্পাদক': 3,
+      'যুগ্ম সাধারণ সম্পাদক': 4,
+      'সাংগঠনিক সম্পাদক': 5,
+      'অর্থ সম্পাদক': 6,
+      'কোষাধ্যক্ষ': 7,
+      'লাইব্রেরিয়ান': 8,
+      'প্রচার সম্পাদক': 9,
+      'ত্রাণ ও সমাজকল্যাণ সম্পাদক': 10,
+      'ক্রীড়া ও সাংস্কৃতিক সম্পাদক': 11,
+      'কার্যনির্বাহী সদস্য': 12,
+      'উপদেষ্টা': 13,
+      'অন্যান্য': 99
+    };
+
+    function getRank(pos) {
+      return POSITION_RANK[pos] || 99;
+    }
+
+    function sortMembersByRank(members) {
+      if (!members) return [];
+      return members.slice().sort(function(a, b) {
+        var rankA = getRank(a.position);
+        var rankB = getRank(b.position);
+        if (rankA !== rankB) return rankA - rankB;
+        return a.name.localeCompare(b.name);
+      });
+    }
 
     function onAdminStateChange() {
       document.getElementById('adminBlock').style.display = isAdmin() ? 'block' : 'none';
@@ -440,7 +506,9 @@
       var members = await Api.get('listCommitteeMembers', { committeeId: committeeId });
       var container = document.getElementById('memberListContainer');
       if (!container) return;
-      _panelData[committeeId] = members || [];
+
+      var sorted = sortMembersByRank(members || []);
+      _panelData[committeeId] = sorted;
 
       var com = _committees.find(c => c.ID === committeeId);
       if (com) {
@@ -458,12 +526,12 @@
         } else adminDiv.innerHTML = '';
       }
 
-      if (!members || !members.length) {
+      if (!sorted || !sorted.length) {
         container.innerHTML = '<div style="color:#7d7260;padding:20px 0;">এই কমিটিতে এখনো কোনো সদস্য নেই।</div>';
         return;
       }
 
-      container.innerHTML = members.map(function(m) {
+      container.innerHTML = sorted.map(function(m) {
         var photo = m.photoURL
           ? '<img class="member-photo" src="' + m.photoURL + '" alt="photo" />'
           : '<div class="member-photo-ph">👤</div>';
@@ -479,7 +547,6 @@
       }).join('');
     }
 
-    // ===== সদস্য যোগ =====
     function openAddMember(committeeId) {
       var memberOptions = _allMembers.map(function(m) {
         return '<option value="' + m.ID + '">' + m.Name + ' (' + m.ID + ')</option>';
@@ -529,7 +596,6 @@
       loadCommitteePanel(committeeId);
     }
 
-    // ===== কমিটি তৈরি / ডিলিট =====
     async function createCommittee() {
       var name = document.getElementById('comName').value.trim();
       if (!name) { Toast.error('কমিটির নাম দিন'); return; }
