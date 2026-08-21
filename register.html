@@ -41,7 +41,7 @@
       </div>
       <div>
         <label>ফোন নম্বর <span style="color:var(--rust);">*</span></label>
-        <input id="mPhone" placeholder="01XXXXXXXXX" />
+        <input id="mPhone" type="tel" placeholder="01XXXXXXXXX" autocomplete="tel" maxlength="11" oninput="formatPhone(this)" />
       </div>
       <div>
         <label>শিক্ষাগত যোগ্যতা</label>
@@ -162,6 +162,16 @@ function handlePhoto(evt) {
   reader.readAsDataURL(file);
 }
 
+
+function formatPhone(el) {
+  var v = el.value.replace(/[^0-9]/g, '').slice(0, 11);
+  el.value = v;
+}
+function normalizePhoneClient(phone) {
+  var s = String(phone || '').replace(/[^0-9]/g, '');
+  if (s.length === 10 && s[0] !== '0') s = '0' + s;
+  return s;
+}
 async function registerMember() {
   const payMethod = document.getElementById('mPayMethod').value;
   const payload = {
@@ -174,7 +184,7 @@ async function registerMember() {
     occupation:     document.getElementById('mOccupation').value.trim(),
     bloodGroup:     document.getElementById('mBlood').value,
     religion:       document.getElementById('mReligion').value,
-    phone:          document.getElementById('mPhone').value.trim(),
+    phone:          normalizePhoneClient(document.getElementById('mPhone').value.trim()),
     photo:          photoDataUrl,
     feeAmount:      document.getElementById('mFee').value || 0,
     paymentMethod:  payMethod,
